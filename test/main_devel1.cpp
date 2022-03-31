@@ -1,19 +1,14 @@
-#include <slipinplace.h>
-
-#include <iostream>
+#include "hrslip.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
+#include <slipinplace.h>
 #include <sstream>
 
-using encoder = slip::encoder_hr;
-using decoder = slip::decoder_hr;
-
-void recode(std::string& src, char end = '#', char esc = '^') {
-    std::replace(src.begin(), src.end(), end, encoder::end_char);
-    std::replace(src.begin(), src.end(), esc, encoder::esc_char);
-}
+using encoder = hrslip::encoder_hr;
+using decoder = hrslip::decoder_hr;
 
 inline std::string to_escaped_string(char* buf, size_t size) {
     std::stringstream oss;
@@ -31,13 +26,12 @@ inline std::string to_escaped_string(char* buf, size_t size) {
     return oss.str();
 }
 
-
 inline void print_encode_results(char* buf, size_t bufsize, const char* src,
                                  size_t srcsize, bool inplace) {
     using namespace std;
-    string srcstr(src, srcsize);
-    recode(srcstr);
-    src = srcstr.c_str();
+    string srcstr = hrslip::hr_to_base<encoder>(src, srcsize);
+    src           = srcstr.c_str();
+    srcsize       = srcstr.length();
     memset(buf, '.', bufsize);
     if (inplace) {
         memcpy(buf, src, srcsize);

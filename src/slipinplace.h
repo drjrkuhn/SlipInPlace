@@ -40,8 +40,8 @@
 
 namespace slip {
 
-    template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333), 
-        CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>
+    template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333),
+              CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>
     struct slip_base {
         static _USE_CONSTEXPR CharT end_char     = END;
         static _USE_CONSTEXPR CharT esc_char     = ESC;
@@ -55,8 +55,8 @@ namespace slip {
         static inline size_t encoded_size(const CharT* buf, size_t buflen) {
             static _USE_CONSTEXPR int _n_special    = 2;
             static _USE_CONSTEXPR CharT _specials[] = {END, ESC};
-            const CharT* buf_end = buf + buflen;
-            size_t nspecial      = 0;
+            const CharT* buf_end                    = buf + buflen;
+            size_t nspecial                         = 0;
             int isp;
             for (; buf < buf_end; buf++) {
                 for (isp = 0; isp < _n_special; isp++) {
@@ -70,14 +70,14 @@ namespace slip {
         }
         static inline size_t encode(CharT* dbuf, size_t dsize, const CharT* sbuf,
                                     size_t ssize) {
-            _USE_CONSTEXPR size_t BAD_DECODE = 0;
-            static _USE_CONSTEXPR int _n_specials    = 2;
+            _USE_CONSTEXPR size_t BAD_DECODE        = 0;
+            static _USE_CONSTEXPR int _n_specials   = 2;
             static _USE_CONSTEXPR CharT _specials[] = {END, ESC};
-            static _USE_CONSTEXPR CharT _escapes[] = {ESCEND, ESCESC};
-            const CharT* send                = sbuf + ssize;
-            CharT* dstart                    = dbuf;
-            CharT* dend                      = dbuf + dsize;
-            if (!dbuf || !sbuf || ssize == 0 || dsize < ssize + 1)
+            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND, ESCESC};
+            const CharT* send                       = sbuf + ssize;
+            CharT* dstart                           = dbuf;
+            CharT* dend                             = dbuf + dsize;
+            if (!dbuf || !sbuf || dsize < ssize + 1)
                 return BAD_DECODE;
             // copy source to end of the dest_buf. memmove copies overlaps in reverse. Use
             // std::copy_backward if converting this function to iterators
@@ -111,7 +111,6 @@ namespace slip {
 
     using byte_encoder = encoder_base<unsigned char>;
     using encoder      = encoder_base<char>;
-    using encoder_hr   = encoder_base<char,'#','^','D','['>;
 
     template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333),
               CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>
@@ -134,13 +133,13 @@ namespace slip {
 
         static inline size_t decode(CharT* dbuf, size_t dsize, const CharT* sbuf,
                                     size_t ssize) {
-            _USE_CONSTEXPR size_t BAD_DECODE = 0;
+            _USE_CONSTEXPR size_t BAD_DECODE        = 0;
             static _USE_CONSTEXPR int _n_special    = 2;
             static _USE_CONSTEXPR CharT _specials[] = {END, ESC};
             static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND, ESCESC};
-            const CharT* send                = sbuf + ssize;
-            CharT* dstart                    = dbuf;
-            CharT* dend                      = dbuf + dsize;
+            const CharT* send                       = sbuf + ssize;
+            CharT* dstart                           = dbuf;
+            CharT* dend                             = dbuf + dsize;
             if (!dbuf || !sbuf || ssize < 1 || dsize < ssize - 1) return BAD_DECODE;
             int isp;
 
@@ -166,7 +165,6 @@ namespace slip {
 
     using byte_decoder = decoder_base<unsigned char>;
     using decoder      = decoder_base<char>;
-    using decoder_hr   = decoder_base<char, '#', '^', 'D', '['>;
 }
 
 #endif // __SLIPINPLACE_H__
