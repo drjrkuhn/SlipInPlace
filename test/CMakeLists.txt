@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(${CMAKE_PROJECT_NAME}-test)
-
-message("test  CORELIB_NAME = ${CORELIB_NAME}")
+project("test_${CORELIB_NAME}")
 
 find_package(catch2 2 CONFIG REQUIRED)
 
@@ -9,7 +7,10 @@ set(TEST_TARGET ${PROJECT_NAME})
 set(TEST_SRCS 
     hrslip.h
     main.cpp	
-    test_encode.cpp
+    test_encode_oop.cpp
+    test_encode_ip.cpp
+    test_decode_oop.cpp
+    test_decode_ip.cpp
     )
 
 

@@ -79,10 +79,12 @@ namespace slip {
             CharT* dend                             = dbuf + dsize;
             if (!dbuf || !sbuf || dsize < ssize + 1)
                 return BAD_DECODE;
-            // copy source to end of the dest_buf. memmove copies overlaps in reverse. Use
-            // std::copy_backward if converting this function to iterators
-            sbuf = (CharT*)memmove(dbuf + dsize - ssize, sbuf, ssize);
-            send = sbuf + ssize;
+            if (dbuf <= sbuf && sbuf <= dend) { // sbuf somewhere in dbuf. So in-place
+                // copy source to end of the dest_buf. memmove copies overlaps in reverse. Use
+                // std::copy_backward if converting this function to iterators
+                sbuf = (CharT*)memmove(dbuf + dsize - ssize, sbuf, ssize);
+                send = sbuf + ssize;
+            }
             int isp;
 
             while (sbuf < send) {
@@ -140,7 +142,7 @@ namespace slip {
             const CharT* send                       = sbuf + ssize;
             CharT* dstart                           = dbuf;
             CharT* dend                             = dbuf + dsize;
-            if (!dbuf || !sbuf || ssize < 1 || dsize < ssize - 1) return BAD_DECODE;
+            if (!dbuf || !sbuf || ssize < 1 || dsize < 1) return BAD_DECODE;
             int isp;
 
             while (sbuf < send) {
@@ -150,7 +152,8 @@ namespace slip {
                     *(dbuf++) = *(sbuf++);
                 } else {
                     // check char after escape
-                    if (sbuf++ >= send) return BAD_DECODE;
+                    sbuf++;
+                    if (sbuf >= send || dbuf >= dend) return BAD_DECODE;
                     for (isp = 0; isp < _n_special; isp++) {
                         if (sbuf[0] == _escapes[isp]) break;
                     }
