@@ -15,10 +15,10 @@ namespace hrslip {
     template <class BASE>
     std::string hr_to_base(std::string src) {
         std::string dest = src;
-        std::replace(dest.begin(), dest.end(), encoder_hr::end_char(), BASE::end_char());
-        std::replace(dest.begin(), dest.end(), encoder_hr::esc_char(), BASE::esc_char());
-        std::replace(dest.begin(), dest.end(), encoder_hr::esc_end_char(), BASE::esc_end_char());
-        std::replace(dest.begin(), dest.end(), encoder_hr::esc_esc_char(), BASE::esc_esc_char());
+        std::replace(dest.begin(), dest.end(), encoder_hr::end_code(), BASE::end_code());
+        std::replace(dest.begin(), dest.end(), encoder_hr::esc_code(), BASE::esc_code());
+        std::replace(dest.begin(), dest.end(), encoder_hr::escend_code(), BASE::escend_code());
+        std::replace(dest.begin(), dest.end(), encoder_hr::escesc_code(), BASE::escesc_code());
         return dest;
     }
 
@@ -30,10 +30,10 @@ namespace hrslip {
     template <class BASE>
     std::string base_to_hr(std::string src) {
         std::string dest = src;
-        std::replace(dest.begin(), dest.end(), BASE::end_char(), encoder_hr::end_char());
-        std::replace(dest.begin(), dest.end(), BASE::esc_char(), encoder_hr::esc_char());
-        std::replace(dest.begin(), dest.end(), BASE::esc_end_char(), encoder_hr::esc_end_char());
-        std::replace(dest.begin(), dest.end(), BASE::esc_esc_char(), encoder_hr::esc_esc_char());
+        std::replace(dest.begin(), dest.end(), BASE::end_code(), encoder_hr::end_code());
+        std::replace(dest.begin(), dest.end(), BASE::esc_code(), encoder_hr::esc_code());
+        std::replace(dest.begin(), dest.end(), BASE::escend_code(), encoder_hr::escend_code());
+        std::replace(dest.begin(), dest.end(), BASE::escesc_code(), encoder_hr::escesc_code());
         return dest;
     }
 
