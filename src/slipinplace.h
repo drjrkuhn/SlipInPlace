@@ -24,12 +24,6 @@
 #    include <cstdint>
 #    include <string.h> // for memmove
 
-//constexpr uint8_t END_CHAR      = '#'; //= 0300;   // End of packet character;
-//constexpr uint8_t ESC_CHAR      = '^'; //= 0333;   // Escape character
-//constexpr uint8_t ESC_END_CHAR  = 'D'; //= 0334;   // Escaped end character
-//constexpr uint8_t ESC_ESC_CHAR  = '['; //= 0335;   // Escaped escape character
-//constexpr uint8_t ESC_NULL_CHAR = 'C'; //* 0336;	// Escaped null char
-
 #    if __cplusplus >= 201103L
 #        define _CONSTEXPR constexpr
 #        define _USE_CONSTEXPR constexpr
@@ -39,6 +33,8 @@
 #    endif
 
 namespace slip {
+
+    /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
 
     template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333),
               CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>

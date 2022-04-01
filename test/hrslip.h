@@ -17,6 +17,8 @@ namespace hrslip {
         std::string dest = src;
         std::replace(dest.begin(), dest.end(), encoder_hr::end_char, BASE::end_char);
         std::replace(dest.begin(), dest.end(), encoder_hr::esc_char, BASE::esc_char);
+        std::replace(dest.begin(), dest.end(), encoder_hr::esc_end_char, BASE::esc_end_char);
+        std::replace(dest.begin(), dest.end(), encoder_hr::esc_esc_char, BASE::esc_esc_char);
         return dest;
     }
 
@@ -30,6 +32,8 @@ namespace hrslip {
         std::string dest = src;
         std::replace(dest.begin(), dest.end(), BASE::end_char, encoder_hr::end_char);
         std::replace(dest.begin(), dest.end(), BASE::esc_char, encoder_hr::esc_char);
+        std::replace(dest.begin(), dest.end(), BASE::esc_end_char, encoder_hr::esc_end_char);
+        std::replace(dest.begin(), dest.end(), BASE::esc_esc_char, encoder_hr::esc_esc_char);
         return dest;
     }
 
