@@ -34,23 +34,28 @@
 
 namespace slip {
 
-    /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-
-    template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333),
-              CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>
-    struct slip_base {
-        static _USE_CONSTEXPR CharT end_char     = END;
-        static _USE_CONSTEXPR CharT esc_char     = ESC;
-        static _USE_CONSTEXPR CharT esc_end_char = ESCEND;
-        static _USE_CONSTEXPR CharT esc_esc_char = ESCESC;
+    /* Standard SLIP: END_V =\300 ESC_V =\333 ESCEND_V =\334 ESCESC_V =\335 */
+    template <typename CharT>
+    struct stdcodes {
+        static _USE_CONSTEXPR CharT SLIP_END    = static_cast<CharT>(0300);
+        static _USE_CONSTEXPR CharT SLIP_ESC    = static_cast<CharT>(0333);
+        static _USE_CONSTEXPR CharT SLIP_ESCEND = static_cast<CharT>(0334);
+        static _USE_CONSTEXPR CharT SLIP_ESCESC = static_cast<CharT>(0335);
     };
 
-    template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333),
-              CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>
-    struct encoder_base : public slip_base<CharT, END, ESC, ESCEND, ESCESC> {
+    template <typename CharT, CharT END_V, CharT ESC_V, CharT ESCEND_V, CharT ESCESC_V>
+    struct slip_base {
+        static _USE_CONSTEXPR CharT end_char     = END_V;
+        static _USE_CONSTEXPR CharT esc_char     = ESC_V;
+        static _USE_CONSTEXPR CharT esc_end_char = ESCEND_V;
+        static _USE_CONSTEXPR CharT esc_esc_char = ESCESC_V;
+    };
+
+    template <typename CharT, CharT END_V, CharT ESC_V, CharT ESCEND_V, CharT ESCESC_V>
+    struct encoder_base : public slip_base<CharT, END_V, ESC_V, ESCEND_V, ESCESC_V> {
         static inline size_t encoded_size(const CharT* buf, size_t buflen) {
             static _USE_CONSTEXPR int _n_special    = 2;
-            static _USE_CONSTEXPR CharT _specials[] = {END, ESC};
+            static _USE_CONSTEXPR CharT _specials[] = {END_V, ESC_V};
             const CharT* buf_end                    = buf + buflen;
             size_t nspecial                         = 0;
             int isp;
@@ -68,8 +73,8 @@ namespace slip {
                                     size_t ssize) {
             _USE_CONSTEXPR size_t BAD_DECODE        = 0;
             static _USE_CONSTEXPR int _n_specials   = 2;
-            static _USE_CONSTEXPR CharT _specials[] = {END, ESC};
-            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND, ESCESC};
+            static _USE_CONSTEXPR CharT _specials[] = {END_V, ESC_V};
+            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND_V, ESCESC_V};
             const CharT* send                       = sbuf + ssize;
             CharT* dstart                           = dbuf;
             CharT* dend                             = dbuf + dsize;
@@ -102,26 +107,22 @@ namespace slip {
             if (dbuf >= dend) {
                 return BAD_DECODE;
             }
-            *(dbuf++) = END;
+            *(dbuf++) = END_V;
             return dbuf - dstart;
         }
     };
 
-    using byte_encoder = encoder_base<unsigned char>;
-    using encoder      = encoder_base<char>;
-
-    template <typename CharT, CharT END = CharT(0300), CharT ESC = CharT(0333),
-              CharT ESCEND = CharT(0334), CharT ESCESC = CharT(0335)>
-    struct decoder_base : public slip_base<CharT, END, ESC, ESCEND, ESCESC> {
+    template <typename CharT, CharT END_V, CharT ESC_V, CharT ESCEND_V, CharT ESCESC_V>
+    struct decoder_base : public slip_base<CharT, END_V, ESC_V, ESCEND_V, ESCESC_V> {
 
         static inline size_t decoded_size(const CharT* buf, size_t buflen) {
             const CharT* bufend = buf + buflen;
             size_t nescapes     = 0;
             for (; buf < bufend; buf++) {
-                if (buf[0] == ESC) {
+                if (buf[0] == ESC_V) {
                     nescapes++;
                     buf++;
-                } else if (buf[0] == END) {
+                } else if (buf[0] == END_V) {
                     buflen--;
                     buf = bufend;
                 }
@@ -133,8 +134,8 @@ namespace slip {
                                     size_t ssize) {
             _USE_CONSTEXPR size_t BAD_DECODE        = 0;
             static _USE_CONSTEXPR int _n_special    = 2;
-            static _USE_CONSTEXPR CharT _specials[] = {END, ESC};
-            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND, ESCESC};
+            static _USE_CONSTEXPR CharT _specials[] = {END_V, ESC_V};
+            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND_V, ESCESC_V};
             const CharT* send                       = sbuf + ssize;
             CharT* dstart                           = dbuf;
             CharT* dend                             = dbuf + dsize;
@@ -142,8 +143,8 @@ namespace slip {
             int isp;
 
             while (sbuf < send) {
-                if (sbuf[0] == END) return dbuf - dstart;
-                if (sbuf[0] != ESC) { // regular character
+                if (sbuf[0] == END_V) return dbuf - dstart;
+                if (sbuf[0] != ESC_V) { // regular character
                     if (dbuf >= dend) return BAD_DECODE;
                     *(dbuf++) = *(sbuf++);
                 } else {
@@ -162,8 +163,28 @@ namespace slip {
         }
     };
 
-    using byte_decoder = decoder_base<unsigned char>;
-    using decoder      = decoder_base<char>;
+    template <typename CharT>
+    struct encoder
+        : public encoder_base<CharT,
+                              stdcodes<CharT>::SLIP_END,
+                              stdcodes<CharT>::SLIP_ESC,
+                              stdcodes<CharT>::SLIP_ESCEND,
+                              stdcodes<CharT>::SLIP_ESCESC> {
+    };
+
+    template <typename CharT>
+    struct decoder
+        : public decoder_base<CharT,
+                              stdcodes<CharT>::SLIP_END,
+                              stdcodes<CharT>::SLIP_ESC,
+                              stdcodes<CharT>::SLIP_ESCEND,
+                              stdcodes<CharT>::SLIP_ESCESC> {
+    };
+
+    //using byte_encoder = encoder<unsigned char>;
+    //using char_encoder = encoder<char>;
+    //using byte_decoder = decoder<unsigned char>;
+    //using char_decoder = decoder<char>;
 }
 
 #endif // __SLIPINPLACE_H__

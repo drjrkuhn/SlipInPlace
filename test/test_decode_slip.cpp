@@ -15,7 +15,7 @@
 
 TEST_CASE("docder_slip out-of-place large buffer", "[docder_slip-oop-01]") {
     using namespace hrslip;
-    using test_decoder = slip::decoder;
+    using test_decoder = slip::decoder<char>;
     size_t dc_size, pre_size;
 
     WHEN("empty input") {

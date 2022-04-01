@@ -7,8 +7,8 @@
 #include <slipinplace.h>
 #include <sstream>
 
-using encoder = hrslip::encoder_hr;
-using decoder = hrslip::decoder_hr;
+using char_encoder = hrslip::encoder_hr;
+using char_decoder = hrslip::decoder_hr;
 
 inline std::string to_escaped_string(char* buf, size_t size) {
     std::stringstream oss;
@@ -29,7 +29,7 @@ inline std::string to_escaped_string(char* buf, size_t size) {
 inline void print_encode_results(char* buf, size_t bufsize, const char* src,
                                  size_t srcsize, bool inplace) {
     using namespace std;
-    string srcstr = hrslip::hr_to_base<encoder>(src, srcsize);
+    string srcstr = hrslip::hr_to_base<char_encoder>(src, srcsize);
     src           = srcstr.c_str();
     srcsize       = srcstr.length();
     memset(buf, '.', bufsize);
@@ -38,7 +38,7 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
         src = buf;
     }
     cout << "src:  \"" << srcstr << "\"";
-    size_t est_nencoded = encoder::encoded_size(src, srcsize);
+    size_t est_nencoded = char_encoder::encoded_size(src, srcsize);
     if (est_nencoded > bufsize) {
         cout << "<<< !!Warning!! dsize not big enough to hold encoded string";
     }
@@ -47,19 +47,19 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
 
     // encode
 
-    nencoded = encoder::encode(buf, bufsize, src, srcsize);
+    nencoded = char_encoder::encode(buf, bufsize, src, srcsize);
     string encstr(buf, nencoded);
     if (nencoded < bufsize) buf[nencoded] = '\0';
     cout << "encs: \"" << encstr << "\"" << endl;
     cout << "ebuf: [" << to_escaped_string(buf, bufsize) << "]" << endl;
 
     // decode
-    size_t est_ndecoded = decoder::decoded_size(buf, nencoded);
+    size_t est_ndecoded = char_decoder::decoded_size(buf, nencoded);
 
     if (inplace) {
-        ndecoded = decoder::decode(buf, bufsize, buf, nencoded);
+        ndecoded = char_decoder::decode(buf, bufsize, buf, nencoded);
     } else {
-        ndecoded = decoder::decode(buf, bufsize, encstr.c_str(), encstr.length());
+        ndecoded = char_decoder::decode(buf, bufsize, encstr.c_str(), encstr.length());
     }
 
     string decstr(buf, ndecoded);
