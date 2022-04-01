@@ -7,8 +7,13 @@
 #include <slipinplace.h>
 #include <sstream>
 
-typedef hrslip::encoder_hr char_encoder;
-typedef hrslip::decoder_hr char_decoder;
+#if 0
+using test_encoder = slip::encoder<char>;
+using test_decoder = slip::decoder<char>;
+#else
+using test_encoder = hrslip::encoder_hr;
+using test_decoder = hrslip::decoder_hr;
+#endif
 
 inline std::string to_escaped_string(char* buf, size_t size) {
     std::stringstream oss;
@@ -29,7 +34,8 @@ inline std::string to_escaped_string(char* buf, size_t size) {
 inline void print_encode_results(char* buf, size_t bufsize, const char* src,
                                  size_t srcsize, bool inplace) {
     using namespace std;
-    string srcstr = hrslip::hr_to_base<char_encoder>(src, srcsize);
+    // recode the human-readable encoded input into test_decoder format
+    string srcstr = hrslip::recode<hrslip::encoder_hr,test_encoder>(src, srcsize);
     src           = srcstr.c_str();
     srcsize       = srcstr.length();
     memset(buf, '.', bufsize);
@@ -38,7 +44,7 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
         src = buf;
     }
     cout << "src:  \"" << srcstr << "\"";
-    size_t est_nencoded = char_encoder::encoded_size(src, srcsize);
+    size_t est_nencoded = test_encoder::encoded_size(src, srcsize);
     if (est_nencoded > bufsize) {
         cout << "<<< !!Warning!! dsize not big enough to hold encoded string";
     }
@@ -47,19 +53,19 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
 
     // encode
 
-    nencoded = char_encoder::encode(buf, bufsize, src, srcsize);
+    nencoded = test_encoder::encode(buf, bufsize, src, srcsize);
     string encstr(buf, nencoded);
     if (nencoded < bufsize) buf[nencoded] = '\0';
     cout << "encs: \"" << encstr << "\"" << endl;
     cout << "ebuf: [" << to_escaped_string(buf, bufsize) << "]" << endl;
 
     // decode
-    size_t est_ndecoded = char_decoder::decoded_size(buf, nencoded);
+    size_t est_ndecoded = test_decoder::decoded_size(buf, nencoded);
 
     if (inplace) {
-        ndecoded = char_decoder::decode(buf, bufsize, buf, nencoded);
+        ndecoded = test_decoder::decode(buf, bufsize, buf, nencoded);
     } else {
-        ndecoded = char_decoder::decode(buf, bufsize, encstr.c_str(), encstr.length());
+        ndecoded = test_decoder::decode(buf, bufsize, encstr.c_str(), encstr.length());
     }
 
     string decstr(buf, ndecoded);
@@ -74,7 +80,7 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
              << " did not match source size:" << srcsize << endl;
     if (decstr != srcstr)
         cout << "!!Warning!! decoded string did not match source string" << endl;
-    cout << " bufsize:" << bufsize;
+    cout << "      bufsize:" << bufsize;
     cout << " srcsize:" << srcsize;
     cout << " est_nencoded:" << est_nencoded;
     cout << " nencoded:" << nencoded;
@@ -88,6 +94,8 @@ int main() {
     using namespace std;
     const size_t bsize = 32;
     char buf[bsize];
+
+    // inputs are in hr_encoder format
 
     char out1[]    = "Lorus";    //"Lorus Ipsum";
     char out2[]    = "Lo^#r#us"; // Favius## Rex\\ \\\\#\\##Aeturnum padre##";
