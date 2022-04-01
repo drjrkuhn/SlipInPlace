@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.8.0)
 project(SlipInPlace VERSION 0.1.0)
 
 set(CORELIB_NAME "libsip")

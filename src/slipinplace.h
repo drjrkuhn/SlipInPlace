@@ -35,27 +35,34 @@
 namespace slip {
 
     /* Standard SLIP: END_V =\300 ESC_V =\333 ESCEND_V =\334 ESCESC_V =\335 */
-    template <typename CharT>
     struct stdcodes {
-        static _USE_CONSTEXPR CharT SLIP_END    = static_cast<CharT>(0300);
-        static _USE_CONSTEXPR CharT SLIP_ESC    = static_cast<CharT>(0333);
-        static _USE_CONSTEXPR CharT SLIP_ESCEND = static_cast<CharT>(0334);
-        static _USE_CONSTEXPR CharT SLIP_ESCESC = static_cast<CharT>(0335);
+        static _USE_CONSTEXPR unsigned char SLIP_END    = 0300; // 0xC0
+        static _USE_CONSTEXPR unsigned char SLIP_ESC    = 0333; // 0xDB
+        static _USE_CONSTEXPR unsigned char SLIP_ESCEND = 0334; // 0xDC
+        static _USE_CONSTEXPR unsigned char SLIP_ESCESC = 0335; // 0xDD
     };
 
-    template <typename CharT, CharT END_V, CharT ESC_V, CharT ESCEND_V, CharT ESCESC_V>
+    
+    template <typename CharT, unsigned char END_V, unsigned char ESC_V, unsigned char ESCEND_V, unsigned char ESCESC_V>
     struct slip_base {
-        static _USE_CONSTEXPR CharT end_char     = END_V;
-        static _USE_CONSTEXPR CharT esc_char     = ESC_V;
-        static _USE_CONSTEXPR CharT esc_end_char = ESCEND_V;
-        static _USE_CONSTEXPR CharT esc_esc_char = ESCESC_V;
+        // target C++11 - no variable or static data member at class scope (since C++14)
+        static _USE_CONSTEXPR CharT end_char() noexcept { return (CharT)END_V; }
+        static _USE_CONSTEXPR CharT esc_char() noexcept  { return (CharT) ESC_V; }
+        static _USE_CONSTEXPR CharT esc_end_char() noexcept { return (CharT)ESCEND_V; }
+        static _USE_CONSTEXPR CharT esc_esc_char() noexcept { return (CharT)ESCESC_V; }
     };
 
-    template <typename CharT, CharT END_V, CharT ESC_V, CharT ESCEND_V, CharT ESCESC_V>
+    template <typename CharT, unsigned char END_V, unsigned char ESC_V, unsigned char ESCEND_V, unsigned char ESCESC_V>
     struct encoder_base : public slip_base<CharT, END_V, ESC_V, ESCEND_V, ESCESC_V> {
-        static inline size_t encoded_size(const CharT* buf, size_t buflen) {
+        typedef slip_base<CharT, END_V, ESC_V, ESCEND_V, ESCESC_V> base;
+        using base::end_char;
+        using base::esc_char;
+        using base::esc_end_char;
+        using base::esc_esc_char;
+        
+        static inline size_t encoded_size(const CharT* buf, size_t buflen) noexcept {
             static _USE_CONSTEXPR int _n_special    = 2;
-            static _USE_CONSTEXPR CharT _specials[] = {END_V, ESC_V};
+            static _USE_CONSTEXPR CharT _specials[] = {end_char(), esc_char()};
             const CharT* buf_end                    = buf + buflen;
             size_t nspecial                         = 0;
             int isp;
@@ -70,11 +77,11 @@ namespace slip {
             return buflen + nspecial + 1;
         }
         static inline size_t encode(CharT* dbuf, size_t dsize, const CharT* sbuf,
-                                    size_t ssize) {
+                                    size_t ssize) noexcept {
             _USE_CONSTEXPR size_t BAD_DECODE        = 0;
             static _USE_CONSTEXPR int _n_specials   = 2;
-            static _USE_CONSTEXPR CharT _specials[] = {END_V, ESC_V};
-            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND_V, ESCESC_V};
+            static _USE_CONSTEXPR CharT _specials[] = {end_char(), esc_char()};
+            static _USE_CONSTEXPR CharT _escapes[]  = {esc_end_char(), esc_esc_char()};
             const CharT* send                       = sbuf + ssize;
             CharT* dstart                           = dbuf;
             CharT* dend                             = dbuf + dsize;
@@ -98,7 +105,7 @@ namespace slip {
                     *(dbuf++) = *(sbuf++); // copy it
                 } else {
                     if (dbuf + 1 >= dend) return BAD_DECODE;
-                    *(dbuf++) = esc_char;
+                    *(dbuf++) = esc_char();
                     *(dbuf++) = _escapes[isp];
                     sbuf++;
                 }
@@ -112,10 +119,15 @@ namespace slip {
         }
     };
 
-    template <typename CharT, CharT END_V, CharT ESC_V, CharT ESCEND_V, CharT ESCESC_V>
+    template <typename CharT, unsigned char END_V, unsigned char ESC_V, unsigned char ESCEND_V, unsigned char ESCESC_V>
     struct decoder_base : public slip_base<CharT, END_V, ESC_V, ESCEND_V, ESCESC_V> {
+        typedef slip_base<CharT, END_V, ESC_V, ESCEND_V, ESCESC_V> base;
+        using base::end_char;
+        using base::esc_char;
+        using base::esc_end_char;
+        using base::esc_esc_char;
 
-        static inline size_t decoded_size(const CharT* buf, size_t buflen) {
+        static inline size_t decoded_size(const CharT* buf, size_t buflen) noexcept {
             const CharT* bufend = buf + buflen;
             size_t nescapes     = 0;
             for (; buf < bufend; buf++) {
@@ -131,11 +143,11 @@ namespace slip {
         }
 
         static inline size_t decode(CharT* dbuf, size_t dsize, const CharT* sbuf,
-                                    size_t ssize) {
+                                    size_t ssize) noexcept {
             _USE_CONSTEXPR size_t BAD_DECODE        = 0;
             static _USE_CONSTEXPR int _n_special    = 2;
-            static _USE_CONSTEXPR CharT _specials[] = {END_V, ESC_V};
-            static _USE_CONSTEXPR CharT _escapes[]  = {ESCEND_V, ESCESC_V};
+            static _USE_CONSTEXPR CharT _specials[] = {end_char(), esc_char()};
+            static _USE_CONSTEXPR CharT _escapes[]  = {esc_end_char(), esc_esc_char()};
             const CharT* send                       = sbuf + ssize;
             CharT* dstart                           = dbuf;
             CharT* dend                             = dbuf + dsize;
@@ -166,19 +178,19 @@ namespace slip {
     template <typename CharT>
     struct encoder
         : public encoder_base<CharT,
-                              stdcodes<CharT>::SLIP_END,
-                              stdcodes<CharT>::SLIP_ESC,
-                              stdcodes<CharT>::SLIP_ESCEND,
-                              stdcodes<CharT>::SLIP_ESCESC> {
+                              stdcodes::SLIP_END,
+                              stdcodes::SLIP_ESC,
+                              stdcodes::SLIP_ESCEND,
+                              stdcodes::SLIP_ESCESC> {
     };
 
     template <typename CharT>
     struct decoder
         : public decoder_base<CharT,
-                              stdcodes<CharT>::SLIP_END,
-                              stdcodes<CharT>::SLIP_ESC,
-                              stdcodes<CharT>::SLIP_ESCEND,
-                              stdcodes<CharT>::SLIP_ESCESC> {
+                              stdcodes::SLIP_END,
+                              stdcodes::SLIP_ESC,
+                              stdcodes::SLIP_ESCEND,
+                              stdcodes::SLIP_ESCESC> {
     };
 
     //using byte_encoder = encoder<unsigned char>;

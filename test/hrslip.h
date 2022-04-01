@@ -9,16 +9,16 @@
 #    define __HRSLIP_H__
 
 namespace hrslip {
-    using encoder_hr = slip::encoder_base<char, '#', '^', 'D', '['>;
-    using decoder_hr = slip::decoder_base<char, '#', '^', 'D', '['>;
+    typedef slip::encoder_base<char, '#', '^', 'D', '['> encoder_hr;
+    typedef slip::decoder_base<char, '#', '^', 'D', '['> decoder_hr;
 
     template <class BASE>
     std::string hr_to_base(std::string src) {
         std::string dest = src;
-        std::replace(dest.begin(), dest.end(), encoder_hr::end_char, BASE::end_char);
-        std::replace(dest.begin(), dest.end(), encoder_hr::esc_char, BASE::esc_char);
-        std::replace(dest.begin(), dest.end(), encoder_hr::esc_end_char, BASE::esc_end_char);
-        std::replace(dest.begin(), dest.end(), encoder_hr::esc_esc_char, BASE::esc_esc_char);
+        std::replace(dest.begin(), dest.end(), encoder_hr::end_char(), BASE::end_char());
+        std::replace(dest.begin(), dest.end(), encoder_hr::esc_char(), BASE::esc_char());
+        std::replace(dest.begin(), dest.end(), encoder_hr::esc_end_char(), BASE::esc_end_char());
+        std::replace(dest.begin(), dest.end(), encoder_hr::esc_esc_char(), BASE::esc_esc_char());
         return dest;
     }
 
@@ -30,10 +30,10 @@ namespace hrslip {
     template <class BASE>
     std::string base_to_hr(std::string src) {
         std::string dest = src;
-        std::replace(dest.begin(), dest.end(), BASE::end_char, encoder_hr::end_char);
-        std::replace(dest.begin(), dest.end(), BASE::esc_char, encoder_hr::esc_char);
-        std::replace(dest.begin(), dest.end(), BASE::esc_end_char, encoder_hr::esc_end_char);
-        std::replace(dest.begin(), dest.end(), BASE::esc_esc_char, encoder_hr::esc_esc_char);
+        std::replace(dest.begin(), dest.end(), BASE::end_char(), encoder_hr::end_char());
+        std::replace(dest.begin(), dest.end(), BASE::esc_char(), encoder_hr::esc_char());
+        std::replace(dest.begin(), dest.end(), BASE::esc_end_char(), encoder_hr::esc_end_char());
+        std::replace(dest.begin(), dest.end(), BASE::esc_esc_char(), encoder_hr::esc_esc_char());
         return dest;
     }
 
@@ -42,4 +42,5 @@ namespace hrslip {
         return base_to_hr<BASE>(std::string(src, size));
     }
 };
-#endif __HRSLIP_H__
+
+#endif // __HRSLIP_H__

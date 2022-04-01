@@ -7,8 +7,8 @@
 #include <slipinplace.h>
 #include <sstream>
 
-using char_encoder = hrslip::encoder_hr;
-using char_decoder = hrslip::decoder_hr;
+typedef hrslip::encoder_hr char_encoder;
+typedef hrslip::decoder_hr char_decoder;
 
 inline std::string to_escaped_string(char* buf, size_t size) {
     std::stringstream oss;
