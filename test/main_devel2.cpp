@@ -32,13 +32,13 @@ int main() {
 #endif
 
 #if !defined(__ALWAYS_INLINE__)
-#if defined(__GNUC__) && __GNUC__ > 3
-#    define __ALWAYS_INLINE__	inline __attribute__ ((__always_inline__))
-#  elif defined(_MSC_VER)
-#    define __ALWAYS_INLINE__	__forceinline
-#  else
-#    define __ALWAYS_INLINE__ inline
-#  endif
+    #if defined(__GNUC__) && __GNUC__ > 3
+        #define __ALWAYS_INLINE__ inline __attribute__((__always_inline__))
+    #elif defined(_MSC_VER)
+        #define __ALWAYS_INLINE__ __forceinline
+    #else
+        #define __ALWAYS_INLINE__ inline
+    #endif
 #endif
 
 #if false
@@ -74,7 +74,7 @@ int main() {
     cout << "LOOP" << endl;
     for (int t = 0; t < test.length(); t++) {
         char tc = test[t];
-        int f = testchar_loop(tc);
+        int f   = testchar_loop(tc);
         cout << '[' << t << "]:" << test[t];
         cout << " ? " << ((f < 0) ? '-' : tofind[f]);
         cout << endl;
@@ -82,7 +82,7 @@ int main() {
     cout << "UNROLLED" << endl;
     for (int t = 0; t < test.length(); t++) {
         char tc = test[t];
-        int f = testchar_unrolled(tc);
+        int f   = testchar_unrolled(tc);
         cout << '[' << t << "]:" << test[t];
         cout << " ? " << ((f < 0) ? '-' : tofind[f]);
         cout << endl;

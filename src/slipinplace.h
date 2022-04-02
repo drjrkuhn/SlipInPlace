@@ -20,21 +20,36 @@
 
 #pragma once
 
+/**
+ * @brief Unroll codelet testing loop, defaults to true (1).
+ *
+ * To turn off codelet loop unrolling, set this macro to
+ * false (0) before including the library header.
+ *
+ * ```c++
+ * #define SLIP_UNROLL_LOOPS 0
+ * #include <slipinplace.h>
+ * ```
+ */
+
 #ifndef __SLIPINPLACE_H
-#    define __SLIPINPLACE_H__
+    #define __SLIPINPLACE_H__
 
-#    include <string.h> // for memmove
+    #ifndef SLIP_UNROLL_LOOPS
+        #define SLIP_UNROLL_LOOPS 1
+    #endif
 
-#if !defined(__ALWAYS_INLINE__)
-#if defined(__GNUC__) && __GNUC__ > 3
-#    define __ALWAYS_INLINE__	inline __attribute__ ((__always_inline__))
-#  elif defined(_MSC_VER)
-#    define __ALWAYS_INLINE__	__forceinline
-#  else
-#    define __ALWAYS_INLINE__ inline
-#  endif
-#endif
+    #include <string.h> // for memmove
 
+    #if !defined(__ALWAYS_INLINE__)
+        #if defined(__GNUC__) && __GNUC__ > 3
+            #define __ALWAYS_INLINE__ inline __attribute__((__always_inline__))
+        #elif defined(_MSC_VER)
+            #define __ALWAYS_INLINE__ __forceinline
+        #else
+            #define __ALWAYS_INLINE__ inline
+        #endif
+    #endif
 
 namespace slip {
 
@@ -86,6 +101,7 @@ namespace slip {
          */
         static constexpr int n_specials = (encodes_null ? 3 : 2);
 
+     protected:
         /** An array of special characters to escape */
         static __ALWAYS_INLINE__ const CharT* special_codes() noexcept {
             static constexpr CharT specials[] = {end_code(), esc_code(), nul_code()};
@@ -97,8 +113,28 @@ namespace slip {
             return escapes;
         }
 
-
+    #ifdef SLIP_UNROLL_LOOPS
+        static __ALWAYS_INLINE__ int test_codes(const CharT c, const CharT* codes) {
+            static_assert(max_specials == 3,"too many codecs to unroll. Recompile is -DSLIP_UNROLL_LOOPS=0");
+            // a good compiler will notice the short-circuit constexpr evaluation
+            // in the first term and eliminate the entire test if false
+            if (n_specials > 2 && c == codes[2]) return 2;
+            if (n_specials > 1 && c == codes[1]) return 1;
+            if (n_specials > 0 && c == codes[0]) return 0;
+            return -1;
+        }
     };
+    #else
+        static __ALWAYS_INLINE__ int test_codes(const CharT c, const CharT* codes) {
+            int i = n_specials;
+            while (--i >= 0) {
+                if (c == codes[i])
+                    break;
+            };
+            return i;
+        }
+    };
+    #endif
 
     /**
      * @brief Basic SLIP encoder.
@@ -139,16 +175,11 @@ namespace slip {
          */
         static inline size_t encoded_size(const CharT* src, size_t srcsize) noexcept {
             // C++11 statics allowed inside functions but not classes
-            static const CharT* specials = special_codes();
-            const CharT* buf_end         = src + srcsize;
-            size_t nspecial              = 0;
+            const CharT* buf_end = src + srcsize;
+            size_t nspecial      = 0;
             int isp;
             for (; src < buf_end; src++) {
-                isp = n_specials;
-                while(--isp >= 0) {
-                    if (src[0] == specials[isp])
-                        break;
-                }
+                isp = base::test_codes(src[0], base::special_codes());
                 if (isp >= 0) nspecial++;
             }
             return srcsize + nspecial + 1;
@@ -177,8 +208,6 @@ namespace slip {
                                     size_t srcsize) noexcept {
             // C++11 statics allowed inside functions but not classes
             static constexpr size_t BAD_DECODE = 0;
-            static const CharT* specials       = special_codes();
-            static const CharT* escapes        = escaped_codes();
             const CharT* send                  = src + srcsize;
             CharT* dstart                      = dest;
             CharT* dend                        = dest + destsize;
@@ -193,17 +222,14 @@ namespace slip {
             int isp;
 
             while (src < send) {
-                isp = n_specials;
-                while (--isp >= 0) {
-                    if (src[0] == specials[isp]) break;
-                }
+                isp = base::test_codes(src[0], base::special_codes());
                 if (isp < 0) { // regular character
                     if (dest >= dend) return BAD_DECODE;
                     *(dest++) = *(src++); // copy it
                 } else {
                     if (dest + 1 >= dend) return BAD_DECODE;
                     *(dest++) = esc_code();
-                    *(dest++) = escapes[isp];
+                    *(dest++) = base::escaped_codes()[isp];
                     src++;
                 }
             }
@@ -290,8 +316,6 @@ namespace slip {
                                     size_t srcsize) noexcept {
             // C++11 statics allowed inside functions but not classes
             static constexpr size_t BAD_DECODE = 0;
-            static const CharT* specials       = special_codes();
-            static const CharT* escapes        = escaped_codes();
             const CharT* send                  = src + srcsize;
             CharT* dstart                      = dest;
             CharT* dend                        = dest + destsize;
@@ -300,19 +324,16 @@ namespace slip {
 
             while (src < send) {
                 if (src[0] == end_code()) return dest - dstart;
-                if (src[0] != esc_code()) { // regular character
-                    if (dest >= dend) return BAD_DECODE;
+                if (src[0] != esc_code()) {              // regular character
+                    if (dest >= dend) return BAD_DECODE; // not enough room for results
                     *(dest++) = *(src++);
                 } else {
                     // check char after escape
                     src++;
                     if (src >= send || dest >= dend) return BAD_DECODE;
-                    isp = n_specials;
-                    while (--isp >= 0) {
-                        if (src[0] == escapes[isp]) break;
-                    }
-                    if (isp < 0) return BAD_DECODE;
-                    *(dest++) = specials[isp];
+                    isp = base::test_codes(src[0], base::escaped_codes());
+                    if (isp < 0) return BAD_DECODE; // invalid escape code
+                    *(dest++) = base::special_codes()[isp];
                     src++;
                 }
             }
