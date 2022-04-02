@@ -45,6 +45,7 @@
         #if defined(__GNUC__) && __GNUC__ > 3
             #define __ALWAYS_INLINE__ inline __attribute__((__always_inline__))
         #elif defined(_MSC_VER)
+            // Does nothing in Debug mode (with standard option /Ob0)
             #define __ALWAYS_INLINE__ inline __forceinline
         #else
             #define __ALWAYS_INLINE__ inline
@@ -180,7 +181,7 @@ namespace slip {
             size_t nspecial              = 0;
             int isp;
             for (; src < buf_end; src++) {
-                isp = base::test_codes(src[0], specials);
+                isp = test_codes(src[0], specials);
                 if (isp >= 0) nspecial++;
             }
             return srcsize + nspecial + 1;
@@ -225,7 +226,7 @@ namespace slip {
             int isp;
 
             while (src < send) {
-                isp = base::test_codes(src[0], specials);
+                isp = test_codes(src[0], specials);
                 if (isp < 0) { // regular character
                     if (dest >= dend) return BAD_DECODE;
                     *(dest++) = *(src++); // copy it
@@ -336,7 +337,7 @@ namespace slip {
                     // check char after escape
                     src++;
                     if (src >= send || dest >= dend) return BAD_DECODE;
-                    isp = base::test_codes(src[0], escapes);
+                    isp = test_codes(src[0], escapes);
                     if (isp < 0) return BAD_DECODE; // invalid escape code
                     *(dest++) = specials[isp];
                     src++;
