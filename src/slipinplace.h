@@ -56,11 +56,11 @@ namespace slip {
 
     /* Standard SLIP codes: END=\300 ESC=\333 ESCEND=\334 ESCESC=\335. */
     struct stdcodes {
-        static constexpr unsigned char SLIP_END     = 0300; ///< 0xC0
-        static constexpr unsigned char SLIP_ESC     = 0333; ///< 0xDB
-        static constexpr unsigned char SLIPX_NULL   = 0;    ///< 0 (nonstandard)
-        static constexpr unsigned char SLIP_ESCEND  = 0334; ///< 0xDC
-        static constexpr unsigned char SLIP_ESCESC  = 0335; ///< 0xDD
+        static constexpr unsigned char SLIP_END      = 0300; ///< 0xC0
+        static constexpr unsigned char SLIP_ESC      = 0333; ///< 0xDB
+        static constexpr unsigned char SLIPX_NULL    = 0;    ///< 0 (nonstandard)
+        static constexpr unsigned char SLIP_ESCEND   = 0334; ///< 0xDC
+        static constexpr unsigned char SLIP_ESCESC   = 0335; ///< 0xDD
         static constexpr unsigned char SLIPX_ESCNULL = 0336; ///< 0xDE (nonstandard)
     };
 
@@ -70,13 +70,13 @@ namespace slip {
      * targets C++11 - no variable or static data member at class scope
      * [(since C++14)](https://en.cppreference.com/w/cpp/language/variable_template)
      *
-     * @tparam _CharT        unsigned char or char
+     * @tparam _CharT       unsigned char or char
      * @tparam _EndC        end character code \300
      * @tparam _EscC        escape character code \333
      * @tparam _EscEndC     escaped end character code \334
      * @tparam _EscEscC     escaped escape character code \334
-     * @tparam _NullC        NULL character code \000
-     * @tparam _EscNullC     escaped NULL character code. If set to anything other than zero, NULLs will be processed
+     * @tparam _NullC       NULL character code \000
+     * @tparam _EscNullC    escaped NULL character code. If set to anything other than zero, NULLs will be processed
      *
      */
     template <typename _CharT, unsigned char _EndC, unsigned char _EscC,
@@ -175,12 +175,12 @@ namespace slip {
          * @return size_t   size needed to encode this buffer
          */
         static inline size_t encoded_size(const _CharT* src, size_t srcsize) noexcept {
-            // C++11 statics allowed inside functions but not classes
-            const _CharT* buf_end = src + srcsize;
-            size_t nspecial       = 0;
+            static const _CharT* specials = special_codes();
+            const _CharT* buf_end         = src + srcsize;
+            size_t nspecial               = 0;
             int isp;
             for (; src < buf_end; src++) {
-                isp = test_codes(src[0], specials);
+                isp = base::test_codes(src[0], specials);
                 if (isp >= 0) nspecial++;
             }
             return srcsize + nspecial + 1;
@@ -207,8 +207,9 @@ namespace slip {
          */
         static inline size_t encode(_CharT* dest, size_t destsize, const _CharT* src,
                                     size_t srcsize) noexcept {
-            // C++11 statics allowed inside functions but not classes
             static constexpr size_t BAD_DECODE = 0;
+            static const _CharT* specials      = special_codes();
+            static const _CharT* escapes       = escaped_codes();
             const _CharT* send                 = src + srcsize;
             _CharT* dstart                     = dest;
             _CharT* dend                       = dest + destsize;
@@ -223,7 +224,7 @@ namespace slip {
             int isp;
 
             while (src < send) {
-                isp = test_codes(src[0], specials);
+                isp = base::test_codes(src[0], specials);
                 if (isp < 0) { // regular character
                     if (dest >= dend) return BAD_DECODE;
                     *(dest++) = *(src++); // copy it
@@ -315,8 +316,9 @@ namespace slip {
          */
         static inline size_t decode(_CharT* dest, size_t destsize, const _CharT* src,
                                     size_t srcsize) noexcept {
-            // C++11 statics allowed inside functions but not classes
             static constexpr size_t BAD_DECODE = 0;
+            static const _CharT* specials      = special_codes();
+            static const _CharT* escapes       = escaped_codes();
             const _CharT* send                 = src + srcsize;
             _CharT* dstart                     = dest;
             _CharT* dend                       = dest + destsize;
@@ -332,7 +334,7 @@ namespace slip {
                     // check char after escape
                     src++;
                     if (src >= send || dest >= dend) return BAD_DECODE;
-                    isp = test_codes(src[0], escapes);
+                    isp = base::test_codes(src[0], escapes);
                     if (isp < 0) return BAD_DECODE; // invalid escape code
                     *(dest++) = specials[isp];
                     src++;
