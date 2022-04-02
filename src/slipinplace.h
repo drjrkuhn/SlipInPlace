@@ -45,7 +45,8 @@
         #if defined(__GNUC__) && __GNUC__ > 3
             #define __ALWAYS_INLINE__ inline __attribute__((__always_inline__))
         #elif defined(_MSC_VER)
-            #define __ALWAYS_INLINE__ __forceinline
+            // Does nothing in Debug mode (with standard option /Ob0)
+            #define __ALWAYS_INLINE__ inline __forceinline
         #else
             #define __ALWAYS_INLINE__ inline
         #endif
@@ -179,7 +180,7 @@ namespace slip {
             size_t nspecial       = 0;
             int isp;
             for (; src < buf_end; src++) {
-                isp = base::test_codes(src[0], base::special_codes());
+                isp = test_codes(src[0], specials);
                 if (isp >= 0) nspecial++;
             }
             return srcsize + nspecial + 1;
@@ -222,14 +223,14 @@ namespace slip {
             int isp;
 
             while (src < send) {
-                isp = base::test_codes(src[0], base::special_codes());
+                isp = test_codes(src[0], specials);
                 if (isp < 0) { // regular character
                     if (dest >= dend) return BAD_DECODE;
                     *(dest++) = *(src++); // copy it
                 } else {
                     if (dest + 1 >= dend) return BAD_DECODE;
                     *(dest++) = esc_code();
-                    *(dest++) = base::escaped_codes()[isp];
+                    *(dest++) = escapes[isp];
                     src++;
                 }
             }
@@ -331,9 +332,9 @@ namespace slip {
                     // check char after escape
                     src++;
                     if (src >= send || dest >= dend) return BAD_DECODE;
-                    isp = base::test_codes(src[0], base::escaped_codes());
+                    isp = test_codes(src[0], escapes);
                     if (isp < 0) return BAD_DECODE; // invalid escape code
-                    *(dest++) = base::special_codes()[isp];
+                    *(dest++) = specials[isp];
                     src++;
                 }
             }
