@@ -238,24 +238,24 @@ TEST_CASE("decoder_hr out-of-place buffer overrun", "[decoder_hr-oop-02]") {
     }
 }
 
-TEST_CASE("decoder_hr out-of-place bad inputs", "[decoder_hr-oop-04]") {
+TEST_CASE("decoder_hr bad inputs", "[decoder_hr-oop-04]") {
     using namespace hrslip;
-    using test_decoder = decoder_hr;
+    using test_decoder = encoder_hr;
     const size_t bsize = 20;
     char buf[bsize];
     size_t dc_size;
     std::string src = recode<decoder_hr,test_decoder>("Lorus");
 
     WHEN("NULL buffer") {
-        dc_size = test_decoder::decode(NULL, bsize, src.c_str(), src.length());
+        dc_size = test_decoder::encode(NULL, bsize, src.c_str(), src.length());
         REQUIRE(dc_size == 0);
     }
     WHEN("zero buffer size") {
-        dc_size = test_decoder::decode(buf, 0, src.c_str(), src.length());
+        dc_size = test_decoder::encode(buf, 0, src.c_str(), src.length());
         REQUIRE(dc_size == 0);
     }
     WHEN("NULL input") {
-        dc_size = test_decoder::decode(buf, bsize, NULL, src.length());
+        dc_size = test_decoder::encode(buf, bsize, NULL, src.length());
         REQUIRE(dc_size == 0);
     }
 }
