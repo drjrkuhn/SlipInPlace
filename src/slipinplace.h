@@ -25,26 +25,16 @@
 
 #    include <string.h> // for memmove
 
-#    if __cplusplus >= 201103L
-#        define _CONSTEXPR constexpr
-#        define _USE_CONSTEXPR constexpr
-#    else
-#        define _CONSTEXPR
-#        define _USE_CONSTEXPR const
-#    endif
-
-#    define _NOEXCEPT noexcept
-
 namespace slip {
 
     /* Standard SLIP codes: END=\300 ESC=\333 ESCEND=\334 ESCESC=\335. */
     struct stdcodes {
-        static _USE_CONSTEXPR unsigned char SLIP_END     = 0300; ///< 0xC0
-        static _USE_CONSTEXPR unsigned char SLIP_ESC     = 0333; ///< 0xDB
-        static _USE_CONSTEXPR unsigned char SLIPX_NUL    = 0;    ///< 0 (nonstandard)
-        static _USE_CONSTEXPR unsigned char SLIP_ESCEND  = 0334; ///< 0xDC
-        static _USE_CONSTEXPR unsigned char SLIP_ESCESC  = 0335; ///< 0xDD
-        static _USE_CONSTEXPR unsigned char SLIPX_ESCNUL = 0336; ///< 0xDE (nonstandard)
+        static constexpr unsigned char SLIP_END     = 0300; ///< 0xC0
+        static constexpr unsigned char SLIP_ESC     = 0333; ///< 0xDB
+        static constexpr unsigned char SLIPX_NUL    = 0;    ///< 0 (nonstandard)
+        static constexpr unsigned char SLIP_ESCEND  = 0334; ///< 0xDC
+        static constexpr unsigned char SLIP_ESCESC  = 0335; ///< 0xDD
+        static constexpr unsigned char SLIPX_ESCNUL = 0336; ///< 0xDE (nonstandard)
     };
 
     /**
@@ -66,33 +56,33 @@ namespace slip {
               unsigned char ESCEND_C, unsigned char ESCESC_C,
               unsigned char NUL_C = 0, unsigned char ESCNUL_C = 0>
     struct slip_base {
-        static _USE_CONSTEXPR CharT end_code() _NOEXCEPT { return (CharT)END_C; }       ///< end code
-        static _USE_CONSTEXPR CharT esc_code() _NOEXCEPT { return (CharT)ESC_C; }       ///< escape code
-        static _USE_CONSTEXPR CharT nul_code() _NOEXCEPT { return (CharT)NUL_C; }       ///< NULL code
-        static _USE_CONSTEXPR CharT escend_code() _NOEXCEPT { return (CharT)ESCEND_C; } ///< escaped end code
-        static _USE_CONSTEXPR CharT escesc_code() _NOEXCEPT { return (CharT)ESCESC_C; } ///< escped escape code
-        static _USE_CONSTEXPR CharT escnul_code() _NOEXCEPT { return (CharT)ESCNUL_C; } ///< escaped NULL code if present
+        static constexpr CharT end_code() noexcept { return (CharT)END_C; }       ///< end code
+        static constexpr CharT esc_code() noexcept { return (CharT)ESC_C; }       ///< escape code
+        static constexpr CharT nul_code() noexcept { return (CharT)NUL_C; }       ///< NULL code
+        static constexpr CharT escend_code() noexcept { return (CharT)ESCEND_C; } ///< escaped end code
+        static constexpr CharT escesc_code() noexcept { return (CharT)ESCESC_C; } ///< escped escape code
+        static constexpr CharT escnul_code() noexcept { return (CharT)ESCNUL_C; } ///< escaped NULL code if present
 
         /** Maximum number of special characters to escape while encoding */
-        static _USE_CONSTEXPR int max_specials = 3;
+        static constexpr int max_specials = 3;
 
         /** doest this encoder/decoder encode for the NULL character? */
-        static _USE_CONSTEXPR bool encodes_null = (ESCNUL_C != 0);
+        static constexpr bool encodes_null = (ESCNUL_C != 0);
 
-        /** 
+        /**
          *  Number of special characters in this codec.
          *  Standard SLIP uses two (end and esc). SLIP+NULL adds a third code.
          */
-        static _USE_CONSTEXPR int n_specials = (encodes_null ? 3 : 2);
+        static constexpr int n_specials = (encodes_null ? 3 : 2);
 
         /** An array of special characters to escape */
-        static inline const CharT* special_codes() _NOEXCEPT {
-            static _USE_CONSTEXPR CharT specials[] = {end_code(), esc_code(), nul_code()};
+        static inline const CharT* special_codes() noexcept {
+            static constexpr CharT specials[] = {end_code(), esc_code(), nul_code()};
             return specials;
         }
         /** An array of special character escapes in the same order as special_codes(). */
-        static inline const CharT* escaped_codes() _NOEXCEPT {
-            static _USE_CONSTEXPR CharT escapes[] = {escend_code(), escesc_code(), escnul_code()};
+        static inline const CharT* escaped_codes() noexcept {
+            static constexpr CharT escapes[] = {escend_code(), escesc_code(), escnul_code()};
             return escapes;
         }
     };
@@ -115,16 +105,16 @@ namespace slip {
               unsigned char NUL_C = 0, unsigned char ESCNUL_C = 0>
     struct encoder_base : public slip_base<CharT, END_C, ESC_C, ESCEND_C, ESCESC_C, NUL_C, ESCNUL_C> {
         typedef slip_base<CharT, END_C, ESC_C, ESCEND_C, ESCESC_C, NUL_C, ESCNUL_C> base;
+        using base::encodes_null;
         using base::end_code;
         using base::esc_code;
-        using base::nul_code;
         using base::escaped_codes;
         using base::escend_code;
         using base::escesc_code;
         using base::escnul_code;
         using base::max_specials;
-        using base::encodes_null;
         using base::n_specials;
+        using base::nul_code;
         using base::special_codes;
 
         /**
@@ -134,7 +124,7 @@ namespace slip {
          * @param srcsize   size of source buffer to parse
          * @return size_t   size needed to encode this buffer
          */
-        static inline size_t encoded_size(const CharT* src, size_t srcsize) _NOEXCEPT {
+        static inline size_t encoded_size(const CharT* src, size_t srcsize) noexcept {
             // C++11 statics allowed inside functions but not classes
             static const CharT* specials = special_codes();
             const CharT* buf_end         = src + srcsize;
@@ -171,14 +161,14 @@ namespace slip {
          * @return size_t   final encoded size or 0 if there was an error while encoding
          */
         static inline size_t encode(CharT* dest, size_t destsize, const CharT* src,
-                                    size_t srcsize) _NOEXCEPT {
+                                    size_t srcsize) noexcept {
             // C++11 statics allowed inside functions but not classes
-            static _USE_CONSTEXPR size_t BAD_DECODE = 0;
-            static const CharT* specials            = special_codes();
-            static const CharT* escapes             = escaped_codes();
-            const CharT* send                       = src + srcsize;
-            CharT* dstart                           = dest;
-            CharT* dend                             = dest + destsize;
+            static constexpr size_t BAD_DECODE = 0;
+            static const CharT* specials       = special_codes();
+            static const CharT* escapes        = escaped_codes();
+            const CharT* send                  = src + srcsize;
+            CharT* dstart                      = dest;
+            CharT* dend                        = dest + destsize;
             if (!dest || !src || destsize < srcsize + 1)
                 return BAD_DECODE;
             if (dest <= src && src <= dend) { // sbuf somewhere in dbuf. So in-place
@@ -231,16 +221,16 @@ namespace slip {
               unsigned char NUL_C = 0, unsigned char ESCNUL_C = 0>
     struct decoder_base : public slip_base<CharT, END_C, ESC_C, ESCEND_C, ESCESC_C, NUL_C, ESCNUL_C> {
         typedef slip_base<CharT, END_C, ESC_C, ESCEND_C, ESCESC_C, NUL_C, ESCNUL_C> base;
+        using base::encodes_null;
         using base::end_code;
         using base::esc_code;
-        using base::nul_code;
         using base::escaped_codes;
         using base::escend_code;
         using base::escesc_code;
         using base::escnul_code;
         using base::max_specials;
-        using base::encodes_null;
         using base::n_specials;
+        using base::nul_code;
         using base::special_codes;
 
         /**
@@ -252,7 +242,7 @@ namespace slip {
          * @param srcsize   size of source buffer to parse
          * @return size_t   size needed to decode this buffer
          */
-        static inline size_t decoded_size(const CharT* src, size_t srcsize) _NOEXCEPT {
+        static inline size_t decoded_size(const CharT* src, size_t srcsize) noexcept {
             const CharT* bufend = src + srcsize;
             size_t nescapes     = 0;
             for (; src < bufend; src++) {
@@ -284,14 +274,14 @@ namespace slip {
          * @return size_t   final decoded size or 0 if there was an error while decoding
          */
         static inline size_t decode(CharT* dest, size_t destsize, const CharT* src,
-                                    size_t srcsize) _NOEXCEPT {
+                                    size_t srcsize) noexcept {
             // C++11 statics allowed inside functions but not classes
-            static _USE_CONSTEXPR size_t BAD_DECODE = 0;
-            static const CharT* specials            = special_codes();
-            static const CharT* escapes             = escaped_codes();
-            const CharT* send                       = src + srcsize;
-            CharT* dstart                           = dest;
-            CharT* dend                             = dest + destsize;
+            static constexpr size_t BAD_DECODE = 0;
+            static const CharT* specials       = special_codes();
+            static const CharT* escapes        = escaped_codes();
+            const CharT* send                  = src + srcsize;
+            CharT* dstart                      = dest;
+            CharT* dend                        = dest + destsize;
             if (!dest || !src || srcsize < 1 || destsize < 1) return BAD_DECODE;
             int isp;
 
