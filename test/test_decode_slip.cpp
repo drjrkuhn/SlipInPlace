@@ -58,6 +58,18 @@ TEST_CASE("decoder_slip out-of-place large buffer", "[decoder_slip-oop-01]") {
         REQUIRE(dslip == "Lorus");
     }
 
+    WHEN("bad encoding") {
+        const size_t bsize = 20;
+        char buf[bsize];
+        std::string src = recode<decoder_hr,test_decoder>("Lo^_rus#");
+        REQUIRE(src.length() == 8);
+        pre_size = test_decoder::decoded_size(src.c_str(), src.length());
+        // decoded_size does not detect bad encoding!
+        REQUIRE(pre_size == 6);
+        dc_size = test_decoder::decode(buf, bsize, src.c_str(), src.length());
+        REQUIRE(dc_size == 0);
+    }    
+
     WHEN("consecutive specials") {
         const size_t bsize = 20;
         char buf[bsize];
@@ -73,6 +85,7 @@ TEST_CASE("decoder_slip out-of-place large buffer", "[decoder_slip-oop-01]") {
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
         REQUIRE(dslip == "Lo\333\300rus");
     }
+
     WHEN("ESC at end") {
         const size_t bsize = 20;
         char buf[bsize];

@@ -120,21 +120,5 @@ int main() {
     if (out3len < bsize + 1)
         print_encode_results(buf, bsize, out3, out3len, true);
 
-    // cout << "Special character table" << endl;
-    // uint8_t high[] = {0x00, 0x10, 0x70};
-    // for (uint8_t cl = 0; cl <= 0x0F; cl++) {
-    //     for (int i = 0; i < 3; i++) {
-    //         uint8_t ch = high[i];
-    //         if (ch == 0x70 && cl < 0x0F)
-    //             continue;
-    //         uint8_t code = cl | ch;
-    //         int hcode    = code;
-    //         cout << "0x" << std::setfill('0') << std::setw(2) << std::hex << hcode;
-    //         cout << "\t'" << char(code) << "'\t";
-    //     }
-    //     cout << endl;
-    // }
-    // cout << endl;
-
     return 0;
 }

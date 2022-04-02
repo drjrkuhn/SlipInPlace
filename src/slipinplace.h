@@ -25,6 +25,17 @@
 
 #    include <string.h> // for memmove
 
+#if !defined(__ALWAYS_INLINE__)
+#if defined(__GNUC__) && __GNUC__ > 3
+#    define __ALWAYS_INLINE__	inline __attribute__ ((__always_inline__))
+#  elif defined(_MSC_VER)
+#    define __ALWAYS_INLINE__	__forceinline
+#  else
+#    define __ALWAYS_INLINE__ inline
+#  endif
+#endif
+
+
 namespace slip {
 
     /* Standard SLIP codes: END=\300 ESC=\333 ESCEND=\334 ESCESC=\335. */
@@ -76,15 +87,17 @@ namespace slip {
         static constexpr int n_specials = (encodes_null ? 3 : 2);
 
         /** An array of special characters to escape */
-        static inline const CharT* special_codes() noexcept {
+        static __ALWAYS_INLINE__ const CharT* special_codes() noexcept {
             static constexpr CharT specials[] = {end_code(), esc_code(), nul_code()};
             return specials;
         }
         /** An array of special character escapes in the same order as special_codes(). */
-        static inline const CharT* escaped_codes() noexcept {
+        static __ALWAYS_INLINE__ const CharT* escaped_codes() noexcept {
             static constexpr CharT escapes[] = {escend_code(), escesc_code(), escnul_code()};
             return escapes;
         }
+
+
     };
 
     /**
@@ -131,12 +144,12 @@ namespace slip {
             size_t nspecial              = 0;
             int isp;
             for (; src < buf_end; src++) {
-                for (isp = 0; isp < n_specials; isp++) {
-                    if (src[0] == specials[isp]) {
-                        nspecial++;
+                isp = n_specials;
+                while(--isp >= 0) {
+                    if (src[0] == specials[isp])
                         break;
-                    }
                 }
+                if (isp >= 0) nspecial++;
             }
             return srcsize + nspecial + 1;
         }
@@ -180,11 +193,11 @@ namespace slip {
             int isp;
 
             while (src < send) {
-                isp = 0;
-                for (; isp < n_specials; isp++) { // encode this char?
+                isp = n_specials;
+                while (--isp >= 0) {
                     if (src[0] == specials[isp]) break;
                 }
-                if (isp >= n_specials) { // regular character
+                if (isp < 0) { // regular character
                     if (dest >= dend) return BAD_DECODE;
                     *(dest++) = *(src++); // copy it
                 } else {
@@ -294,10 +307,11 @@ namespace slip {
                     // check char after escape
                     src++;
                     if (src >= send || dest >= dend) return BAD_DECODE;
-                    for (isp = 0; isp < n_specials; isp++) {
+                    isp = n_specials;
+                    while (--isp >= 0) {
                         if (src[0] == escapes[isp]) break;
                     }
-                    if (isp >= n_specials) return BAD_DECODE;
+                    if (isp < 0) return BAD_DECODE;
                     *(dest++) = specials[isp];
                     src++;
                 }

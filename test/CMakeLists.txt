@@ -29,3 +29,8 @@ target_compile_features("devel1" PUBLIC cxx_std_11)
 add_dependencies("devel1" ${CORELIB_NAME})
 target_link_libraries("devel1" PRIVATE ${CORELIB_NAME})
 
+add_executable("devel2" hrslip.h main_devel2.cpp)
+target_compile_features("devel2" PUBLIC cxx_std_11)
+add_dependencies("devel2" ${CORELIB_NAME})
+target_link_libraries("devel2" PRIVATE ${CORELIB_NAME})
+
