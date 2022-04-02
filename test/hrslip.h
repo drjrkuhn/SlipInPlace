@@ -13,6 +13,9 @@ namespace hrslip {
     typedef slip::encoder_base<char, '#', '^', 'D', '['> encoder_hr;
     typedef slip::decoder_base<char, '#', '^', 'D', '['> decoder_hr;
 
+    typedef slip::encoder_base<char, '#', '^', 'D', '[', '0', '@'> encoder_hrnull;
+    typedef slip::decoder_base<char, '#', '^', 'D', '[', '0', '@'> decoder_hrnull;
+
     template <class FROM, class TO>
     std::string recode(const std::string& src) {
         std::string dest = src;
@@ -23,9 +26,10 @@ namespace hrslip {
         }
         return dest;
     }
+
     template <class FROM, class TO>
     std::string recode(const char* src, size_t size) {
-        return recode<FROM,TO>(std::string(src,size));
+        return recode<FROM,TO>(std::string(src, size));
     }
 };
 

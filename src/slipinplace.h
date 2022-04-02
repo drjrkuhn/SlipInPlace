@@ -75,15 +75,19 @@ namespace slip {
 
         /** Maximum number of special characters to escape while encoding */
         static _USE_CONSTEXPR int max_specials = 3;
-        /**
+
+        /** doest this encoder/decoder encode for the NULL character? */
+        static _USE_CONSTEXPR bool encodes_null = (ESCNUL_C != 0);
+
+        /** 
          *  Number of special characters in this codec.
          *  Standard SLIP uses two (end and esc). SLIP+NULL adds a third code.
          */
-        static _USE_CONSTEXPR int n_specials = ESCNUL_C == 0 ? 2 : 3;
+        static _USE_CONSTEXPR int n_specials = (encodes_null ? 3 : 2);
 
         /** An array of special characters to escape */
         static inline const CharT* special_codes() _NOEXCEPT {
-            static _USE_CONSTEXPR CharT specials[] = {end_code(), esc_code(), 0};
+            static _USE_CONSTEXPR CharT specials[] = {end_code(), esc_code(), nul_code()};
             return specials;
         }
         /** An array of special character escapes in the same order as special_codes(). */
@@ -113,13 +117,14 @@ namespace slip {
         typedef slip_base<CharT, END_C, ESC_C, ESCEND_C, ESCESC_C, NUL_C, ESCNUL_C> base;
         using base::end_code;
         using base::esc_code;
+        using base::nul_code;
         using base::escaped_codes;
         using base::escend_code;
         using base::escesc_code;
         using base::escnul_code;
         using base::max_specials;
+        using base::encodes_null;
         using base::n_specials;
-        using base::nul_code;
         using base::special_codes;
 
         /**
@@ -228,13 +233,14 @@ namespace slip {
         typedef slip_base<CharT, END_C, ESC_C, ESCEND_C, ESCESC_C, NUL_C, ESCNUL_C> base;
         using base::end_code;
         using base::esc_code;
+        using base::nul_code;
         using base::escaped_codes;
         using base::escend_code;
         using base::escesc_code;
         using base::escnul_code;
         using base::max_specials;
+        using base::encodes_null;
         using base::n_specials;
-        using base::nul_code;
         using base::special_codes;
 
         /**
@@ -359,6 +365,7 @@ namespace slip {
                                          stdcodes::SLIP_ESCEND,
                                          stdcodes::SLIP_ESCESC> {
     };
+
     /**
      * @brief Standard slip decoder with additional NULL character encoding.
      * @copydoc decoder_base
