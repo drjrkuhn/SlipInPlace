@@ -116,7 +116,7 @@ namespace slip {
 
     #ifdef SLIP_UNROLL_LOOPS
         static __ALWAYS_INLINE__ int test_codes(const _CharT c, const _CharT* codes) {
-            static_assert(max_specials == 3, "too many codecs to unroll. Recompile is -DSLIP_UNROLL_LOOPS=0");
+            static_assert(max_specials == 3, "too many codecs to unroll. Recompile with -DSLIP_UNROLL_LOOPS=0");
             // a good compiler will notice the short-circuit constexpr evaluation
             // in the first term and eliminate the entire test if false
             if (n_specials > 2 && c == codes[2]) return 2;
