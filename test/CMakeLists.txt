@@ -7,7 +7,8 @@ find_package(catch2 2 CONFIG REQUIRED)
 set(TEST_TARGET ${PROJECT_NAME})
 set(TEST_SRCS 
     hrslip.h
-    main.cpp	
+    main.cpp
+    test_encode.cpp
     test_encode_oop.cpp
     test_encode_ip.cpp
     test_encode_null.cpp
