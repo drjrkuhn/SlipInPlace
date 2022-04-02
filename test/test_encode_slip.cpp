@@ -13,101 +13,81 @@
 
 #include <catch.hpp>
 
+using namespace hrslip;
+using test_encoder = slip::encoder<char>;
+
 TEST_CASE("encoder_slip out-of-place large buffer", "[encoder_slip-oop-01]") {
-    using namespace hrslip;
-    using test_encoder = slip::encoder<char>;
-    size_t ec_size, pre_size;
+    size_t ec_size;
 
     WHEN("empty input") {
         const size_t bsize = 20;
         char buf[bsize];
         std::string src = recode<encoder_hr, test_encoder>("");
-        REQUIRE(src.length() == 0);
-        pre_size = test_encoder::encoded_size(src.c_str(), src.length());
-        REQUIRE(pre_size == 1);
-        ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length());
-        REQUIRE(ec_size == 1);
-        std::string dest = recode<test_encoder, encoder_hr>(buf, ec_size);
-        REQUIRE(dest == "#");
-        std::string dslip(buf, ec_size);
+        REQUIRE(0 == src.length());
+        REQUIRE(1 == test_encoder::encoded_size(src.c_str(), src.length()));
+        REQUIRE(1 == (ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length())));
+        REQUIRE("#" == recode<test_encoder, encoder_hr>(buf, ec_size));
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-        REQUIRE(dslip == "\300");
+        REQUIRE("\300" == std::string(buf, ec_size));
     }
 
     WHEN("no specials") {
         const size_t bsize = 20;
         char buf[bsize];
         std::string src = recode<encoder_hr, test_encoder>("Lorus");
-        REQUIRE(src.length() == 5);
-        pre_size = test_encoder::encoded_size(src.c_str(), src.length());
-        REQUIRE(pre_size == 6);
-        ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length());
-        REQUIRE(ec_size == 6);
-        std::string dest = recode<test_encoder, encoder_hr>(buf, ec_size);
-        REQUIRE(dest == "Lorus#");
-        std::string dslip(buf, ec_size);
+        REQUIRE(5 == src.length());
+        REQUIRE(6 == test_encoder::encoded_size(src.c_str(), src.length()));
+        REQUIRE(6 == (ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length())));
+        REQUIRE("Lorus#" == recode<test_encoder, encoder_hr>(buf, ec_size));
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-        REQUIRE(dslip == "Lorus\300");
+        REQUIRE("Lorus\300" == std::string(buf, ec_size));
     }
 
     WHEN("consecutive specials") {
         const size_t bsize = 20;
         char buf[bsize];
         std::string src = recode<encoder_hr, test_encoder>("Lo^#rus");
-        REQUIRE(src.length() == 7);
-        pre_size = test_encoder::encoded_size(src.c_str(), src.length());
-        REQUIRE(pre_size == 10);
-        ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length());
-        REQUIRE(ec_size == 10);
-        std::string dest = recode<test_encoder, encoder_hr>(buf, ec_size);
-        REQUIRE(dest == "Lo^[^Drus#");
-        std::string dslip(buf, ec_size);
+        REQUIRE(7 == src.length());
+        REQUIRE(10 == test_encoder::encoded_size(src.c_str(), src.length()));
+        REQUIRE(10 == (ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length())));
+        REQUIRE("Lo^[^Drus#" == recode<test_encoder, encoder_hr>(buf, ec_size));
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-        REQUIRE(dslip == "Lo\333\335\333\334rus\300");
+        REQUIRE("Lo\333\335\333\334rus\300" == std::string(buf, ec_size));
     }
+
     WHEN("ESC at end") {
         const size_t bsize = 20;
         char buf[bsize];
         std::string src = recode<encoder_hr, test_encoder>("Lorus^");
-        REQUIRE(src.length() == 6);
-        pre_size = test_encoder::encoded_size(src.c_str(), src.length());
-        REQUIRE(pre_size == 8);
-        ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length());
-        REQUIRE(ec_size == 8);
-        std::string dest = recode<test_encoder, encoder_hr>(buf, ec_size);
-        REQUIRE(dest == "Lorus^[#");
-        std::string dslip(buf, ec_size);
+        REQUIRE(6 == src.length());
+        REQUIRE(8 == test_encoder::encoded_size(src.c_str(), src.length()));
+        REQUIRE(8 == (ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length())));
+        REQUIRE("Lorus^[#" == recode<test_encoder, encoder_hr>(buf, ec_size));
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-        REQUIRE(dslip == "Lorus\333\335\300");
+        REQUIRE("Lorus\333\335\300" == std::string(buf, ec_size));
     }
+
     WHEN("END at end") {
         const size_t bsize = 20;
         char buf[bsize];
         std::string src = recode<encoder_hr, test_encoder>("Lorus#");
-        REQUIRE(src.length() == 6);
-        pre_size = test_encoder::encoded_size(src.c_str(), src.length());
-        REQUIRE(pre_size == 8);
-        ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length());
-        REQUIRE(ec_size == 8);
-        std::string dest = recode<test_encoder, encoder_hr>(buf, ec_size);
-        REQUIRE(dest == "Lorus^D#");
-        std::string dslip(buf, ec_size);
+        REQUIRE(6 == src.length());
+        REQUIRE(8 == test_encoder::encoded_size(src.c_str(), src.length()));
+        REQUIRE(8 == (ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length())));
+        REQUIRE("Lorus^D#" == recode<test_encoder, encoder_hr>(buf, ec_size));
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-        REQUIRE(dslip == "Lorus\333\334\300");
+        REQUIRE("Lorus\333\334\300" == std::string(buf, ec_size));
     }
+
     WHEN("consecutive specials at end") {
         const size_t bsize = 20;
         char buf[bsize];
         std::string src = recode<encoder_hr, test_encoder>("Lorus^##");
-        REQUIRE(src.length() == 8);
-        pre_size = test_encoder::encoded_size(src.c_str(), src.length());
-        REQUIRE(pre_size == 12);
-        ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length());
-        REQUIRE(ec_size == 12);
-        std::string dest = recode<test_encoder, encoder_hr>(buf, ec_size);
-        REQUIRE(dest == "Lorus^[^D^D#");
-        std::string dslip(buf, ec_size);
+        REQUIRE(8 == src.length());
+        REQUIRE(12 == test_encoder::encoded_size(src.c_str(), src.length()));
+        REQUIRE(12 == (ec_size = test_encoder::encode(buf, bsize, src.c_str(), src.length())));
+        REQUIRE("Lorus^[^D^D#" == recode<test_encoder, encoder_hr>(buf, ec_size));
         /* Standard SLIP: END =\300 ESC =\333 ESCEND =\334 ESCESC =\335 */
-        REQUIRE(dslip == "Lorus\333\335\333\334\333\334\300");
+        REQUIRE("Lorus\333\335\333\334\333\334\300" == std::string(buf, ec_size));
     }
 }
