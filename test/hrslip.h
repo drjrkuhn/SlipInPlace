@@ -19,6 +19,8 @@ namespace hrslip {
     template <class FROM, class TO>
     std::string recode(const std::string& src) {
         std::string dest = src;
+        if (src.length() == 0)
+            return dest;
         assert(FROM::n_specials == TO::n_specials);
         for (int i = 0; i < FROM::n_specials; i++) {
             std::replace(dest.begin(), dest.end(), FROM::special_codes()[i], TO::special_codes()[i]);
