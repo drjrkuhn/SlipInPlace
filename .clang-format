@@ -41,3 +41,5 @@ BraceWrapping:
   SplitEmptyNamespace: false
 
 IncludeBlocks: Merge
+
+SortUsingDeclarations: false
