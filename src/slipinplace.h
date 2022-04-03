@@ -60,12 +60,12 @@ namespace slip {
 
     /* Standard SLIP codes: END=\300 ESC=\333 ESCEND=\334 ESCESC=\335. */
     struct stdcodes {
-        static constexpr unsigned char SLIP_END      = 0300; ///< 0xC0
-        static constexpr unsigned char SLIP_ESCEND   = 0334; ///< 0xDC
-        static constexpr unsigned char SLIP_ESC      = 0333; ///< 0xDB
-        static constexpr unsigned char SLIP_ESCESC   = 0335; ///< 0xDD
-        static constexpr unsigned char SLIPX_NULL    = 0;    ///< 0 (nonstandard)
-        static constexpr unsigned char SLIPX_ESCNULL = 0336; ///< 0xDE (nonstandard)
+        static constexpr uint8_t SLIP_END      = 0300; ///< 0xC0
+        static constexpr uint8_t SLIP_ESCEND   = 0334; ///< 0xDC
+        static constexpr uint8_t SLIP_ESC      = 0333; ///< 0xDB
+        static constexpr uint8_t SLIP_ESCESC   = 0335; ///< 0xDD
+        static constexpr uint8_t SLIPX_NULL    = 0;    ///< 0 (nonstandard)
+        static constexpr uint8_t SLIPX_ESCNULL = 0336; ///< 0xDE (nonstandard)
     };
 
     /**************************************************************************************
@@ -87,11 +87,10 @@ namespace slip {
      * @tparam _EscNullC    escaped NULL character code. If set to anything other than zero, NULLs will be processed
      *
      */
-    template <typename _CharT, unsigned char _EndC, unsigned char _EscEndC, unsigned char _EscC, unsigned char _EscEscC,
-              unsigned char _NullC = 0, unsigned char _EscNullC = 0>
+    template <typename _CharT, uint8_t _EndC, uint8_t _EscEndC, uint8_t _EscC, uint8_t _EscEscC,
+              uint8_t _NullC = 0, uint8_t _EscNullC = 0>
     struct slip_base {
-        using char_type    = _CharT;
-        using pointer_type = _CharT*;
+        using char_type = _CharT;
         static constexpr _CharT end_code() noexcept { return (_CharT)_EndC; }         ///< end code
         static constexpr _CharT escend_code() noexcept { return (_CharT)_EscEndC; }   ///< escaped end code
         static constexpr _CharT esc_code() noexcept { return (_CharT)_EscC; }         ///< escape code
@@ -166,9 +165,10 @@ namespace slip {
      * @tparam _NullC       NULL character code \000
      * @tparam _EscNullC    escaped NULL character code \335 (non-standard)
      */
-    template <typename _CharT, unsigned char... _C>
-    struct encoder_base : public slip_base<_CharT, _C...> {
-        using BASE = slip_base<_CharT, _C...>;
+    template <typename _CharT, uint8_t _EndC, uint8_t _EscEndC, uint8_t _EscC, uint8_t _EscEscC,
+              uint8_t _NullC = 0, uint8_t _EscNullC = 0>
+    struct encoder_base : public slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC> {
+        using BASE = slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC>;
         using BASE::end_code;
         using BASE::escend_code;
         using BASE::esc_code;
@@ -284,9 +284,10 @@ namespace slip {
      * @tparam _NullC       NULL character code \000
      * @tparam _EscNullC    escaped NULL character code \335 (non-standard)
      */
-    template <typename _CharT, unsigned char... _C>
-    struct decoder_base : public slip_base<_CharT, _C...> {
-        using BASE = slip_base<_CharT, _C...>;
+    template <typename _CharT, uint8_t _EndC, uint8_t _EscEndC, uint8_t _EscC, uint8_t _EscEscC,
+              uint8_t _NullC = 0, uint8_t _EscNullC = 0>
+    struct decoder_base : public slip_base<_CharT,  _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC> {
+        using BASE = slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC>;
         using BASE::end_code;
         using BASE::escend_code;
         using BASE::esc_code;
@@ -396,17 +397,17 @@ namespace slip {
     using slipnull_decoder_base = decoder_base<_CharT, stdcodes::SLIP_END, stdcodes::SLIP_ESCEND, stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC, stdcodes::SLIPX_NULL, stdcodes::SLIPX_ESCNULL>;
 
     /**************************************************************************************
-     * Final byte-oriented (unsigned char) standard encoder and decoder
+     * Final byte-oriented (uint8_t) standard encoder and decoder
      **************************************************************************************/
 
     /** byte-oriented standard SLIP encoder */
-    using encoder = slip_encoder_base<unsigned char>;
+    using encoder = slip_encoder_base<uint8_t>;
     /** byte-oriented standard SLIP decoder */
-    using decoder = slip_decoder_base<unsigned char>;
+    using decoder = slip_decoder_base<uint8_t>;
     /** byte-oriented SLIP+NULL encoder */
-    using null_encoder = slipnull_encoder_base<unsigned char>;
+    using null_encoder = slipnull_encoder_base<uint8_t>;
     /** byte-oriented SLIP+NULL decoder */
-    using null_decoder = slipnull_decoder_base<unsigned char>;
+    using null_decoder = slipnull_decoder_base<uint8_t>;
 
 }
 
