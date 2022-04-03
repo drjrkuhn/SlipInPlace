@@ -39,6 +39,7 @@
         #define SLIP_UNROLL_LOOPS 1
     #endif
 
+    #include <cstdint> // for uint8_t
     #include <string.h> // for memmove
 
     #if !defined(__ALWAYS_INLINE__)

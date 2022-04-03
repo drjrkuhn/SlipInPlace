@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8.0)
-project("test_${CORELIB_NAME}")
+project("test_${CORELIB_NAME}" VERSION ${CMAKE_PROJECT_VERSION})
 
 find_package(catch2 2 CONFIG REQUIRED)
 

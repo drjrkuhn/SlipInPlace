@@ -7,6 +7,7 @@
     #include <string>
     #include <ostream>
     #include <sstream>
+    #include <algorithm>
 
 namespace slip {
     inline std::string escaped(const char* buf, size_t size, const char* brackets = "\"\"") {
