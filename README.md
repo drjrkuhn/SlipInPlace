@@ -115,7 +115,7 @@ size_t dsize = decoder_hrnull::decode(buffer,32,buffer,esize);
 //> dbuf == "Lo^#rus"; dsize == 7;
 ```
 
-The `\examples\sip_encode` folder contains a similar human-readable encoding the prints encoded and decoded streams on the Arduino's serial port. 
+The `\examples\sip_encode` folder contains a similar human-readable encoding that prints encoded and decoded streams on the Arduino's serial port. 
 
 (You can get a glimpse of how in-place _vs_ out-of-place encoding works by looking at the diagnostic buffer outputs.)
 
