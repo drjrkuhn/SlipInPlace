@@ -3,7 +3,7 @@
 #pragma once
 
 #include <cassert>
-#include <slipinplace.h>
+#include <SlipInPlace.h>
 #include <string>
 
 #ifndef __HRSLIP_H__

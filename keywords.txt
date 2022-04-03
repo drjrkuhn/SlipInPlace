@@ -1,15 +1,48 @@
 #keywords.txt is formatted in four fields which are separated by a single true tab (not spaces):
 #KEYWORD	KEYWORD_TOKENTYPE	REFERENCE_LINK	RSYNTAXTEXTAREA_TOKENTYPE
 
-
-# Syntax Coloring Map For ExampleLibrary
+# Macros
+SLIP_UNROLL_LOOPS   KEYWORD2
 
 # Datatypes (KEYWORD1)
-Test	KEYWORD1
+stdcodes	KEYWORD1    DATA_TYPE
+encoder_base     KEYWORD1   DATA_TYPE
+decoder_base     KEYWORD1   DATA_TYPE
+slip_encoder_base    KEYWORD1   DATA_TYPE
+slip_decoder_base     KEYWORD1   DATA_TYPE
+slipnull_encoder_base     KEYWORD1   DATA_TYPE
+slipnull_decoder_base     KEYWORD1   DATA_TYPE
+encoder     KEYWORD1   DATA_TYPE
+decoder     KEYWORD1   DATA_TYPE
+null_encoder     KEYWORD1   DATA_TYPE
+null_decoder     KEYWORD1   DATA_TYPE
 
-# Methods and Functions (KEYWORD2)
-doSomething	KEYWORD2
+# Free Functions (KEYWORD2)
+escaped      KEYWORD2
+
+# Methods
+end_code     KEYWORD2
+escend_code      KEYWORD2
+esc_code     KEYWORD2
+escesc_code      KEYWORD2
+null_code    KEYWORD2
+escnull_code     KEYWORD2
+max_specials     KEYWORD2
+num_specials     KEYWORD2
+is_null_encoded      KEYWORD2
+special_codes    KEYWORD2
+escaped_codes    KEYWORD2
+encoded_size     KEYWORD2
+encode   KEYWORD2
+decoded_size     KEYWORD2
+decode   KEYWORD2
 
 # Instances (KEYWORD2)
 
 # Constants (LITERAL1)
+SLIP_END    LITERAL1
+SLIP_ESCEND    LITERAL1
+SLIP_ESC    LITERAL1
+SLIP_ESCESC    LITERAL1
+SLIPX_NULL    LITERAL1
+SLIPX_ESCNULL    LITERAL1

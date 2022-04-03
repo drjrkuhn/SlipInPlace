@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <slipinplace.h>
+#include <SlipInPlace.h>
 #include <sstream>
 #include <string>
 #include "sliputils.h"

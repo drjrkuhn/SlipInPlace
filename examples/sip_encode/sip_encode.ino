@@ -10,7 +10,7 @@
  *********************************************************************/
 
 #include <Arduino.h>
-#include <slipinplace.h>
+#include <SlipInPlace.h>
 
 // human-readable encoders and decoders
 //                               END  ESC ESCEND ESCESC

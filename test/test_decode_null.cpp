@@ -4,7 +4,7 @@
 
 #include "hrslip.h"
 #include <catch.hpp>
-#include <slipinplace.h>
+#include <SlipInPlace.h>
 #include <string>
 
 /**************************************************************************************

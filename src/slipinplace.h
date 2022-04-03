@@ -1,5 +1,5 @@
 /*!
- *  @file slipinplace.h
+ *  @file SlipInPlace.h
  *
  *  @mainpage SlipInPlace
  *
@@ -28,7 +28,7 @@
  *
  * ```c++
  * #define SLIP_UNROLL_LOOPS 0
- * #include <slipinplace.h>
+ * #include <SlipInPlace.h>
  * ```
  */
 
