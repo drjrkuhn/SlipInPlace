@@ -22,10 +22,92 @@ The protocol then adds an END code at the end of the packet that serial handlers
 
 This library has another SLIP+NULL encoder that replaces `END` and `ESC` as above, but _also_ searches for and replaces any `NULL` characters (`\0`) in the middle of the packet with a two-byte `ESC-EscapedNULL` sequence. That way we can guarantee no `NULL` bytes in the encoded packet. Serial communication handlers [^1] that only deal with C-strings (ending in `\0`) can safely handle data containing the byte zero after encoding. 
 
+[^1]: I'm looking at you, [MicroManager](https://micro-manager.org/) device driver `GetSerialAnswer()`.
+
+
 | Char Code     | Octal   | Hex    | encoded as             |
 |:--------------|--------:|-------:|------------------------|
 | NULL          |  `\000` | `0x00` | `\333\336`, `0xDBDE`   |
 | EscapedNULL   |  `\336` | `0xDE` | _never alone_          |
 
-[^1]: I'm looking at you, [MicroManager](https://micro-manager.org/) device driver `GetSerialAnswer()`.
 
+
+
+### Standard encoding
+
+The standard SLIP encoder and decoder are pre-defined. Two simple use cases are below
+
+Out-of-place encoding and decoding:
+```C++
+char ebuf[32];
+char* source = "Lo\300rus"; // Note END in middle of string
+
+// encoding
+size_t esize = slip::encoder<char>::encode(ebuf,32,source,strlen(source));
+//> ebuf == "Lo\333\334rus\300"; esize == 8; END(\300) at end
+
+// decoding
+char dbuf[32];
+size_t dsize = slip::decoder<char>::decode(dbuf,32,ebuf,esize);
+//> dbuf == "Lo\300rus"; dsize == 6;
+std::string decoded(dbuf,dsize);
+```
+
+In-place encoding and decoding:
+```C++
+char buffer[32];
+char* source = "Lo\300rus"; // Note END in middle of string
+
+// encoding
+strcpy(buffer, source);
+size_t esize = slip::encoder<char>::encode(buffer,32,source,strlen(source));
+//> buffer == "Lo\333\334rus\300"; esize == 8; END(\300) at end
+
+// decoding
+size_t dsize = slip::decoder<char>::decode(buffer,32,ebuf,esize);
+//> buffer == "Lo\300rus"; dsize == 6;
+std::string decoded(buffer,dsize);
+```
+
+### Other encodings
+
+Codes are defined at compile time using template parameters. For example, `\test\hrslip.h` defines a human-readable SLIP coded used for almost all algorith testing.
+
+```C++
+typedef slip::encoder_base<char, '#', '^', 'D', '[', '0', '@'> encoder_hrnull;
+typedef slip::decoder_base<char, '#', '^', 'D', '[', '0', '@'> decoder_hrnull;
+```
+
+The resulting codelets (in template order)
+
+| Char Code     | Char  | encoded as        |
+|:--------------|------:|-------------------|
+| END           |  `#`  | `^D`              |
+| ESC           |  `^`  | `^[`              |
+| EscapedEND    |  `D`  | _never alone_     |
+| EscapedESC    |  `[`  | _never alone_     |
+| NULL          |  `0`  | `^@`              |
+| EscapedNULL   |  `@`  | _never alone_     |
+
+So for example
+
+```C++
+const size_t bsize = 10;
+char buffer[32];
+char* source = "Lo^#rus";
+
+// encoding
+size_t esize = encoder_hrnull::encode(buffer,32,source,strlen(source));
+//> ebuf == "Lo^[^Drus#"; esize == 10;
+// Original ESC^ is now ^[, END# is now ^D and END# only at terminus
+
+// decoding
+size_t dsize = decoder_hrnull::decode(buffer,32,buffer,esize);
+//> dbuf == "Lo^#rus"; dsize == 7;
+```
+
+### Tests and Examples
+
+The encoding and decoding libraries have a LOT of unit tests of various scenarios. See the `\tests` directory for Unit tests.
+
+See `\examples` for Arduino sample sketches.
