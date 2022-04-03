@@ -7,35 +7,21 @@
 #include <slipinplace.h>
 #include <sstream>
 
+#include <sliputils.h>
+
 #if 0
 using test_encoder = slip::encoder<char>;
 using test_decoder = slip::decoder<char>;
 #else
-using test_encoder = hrslip::encoder_hr;
-using test_decoder = hrslip::decoder_hr;
+using test_encoder = slip::encoder_hr;
+using test_decoder = slip::decoder_hr;
 #endif
-
-inline std::string to_escaped_string(char* buf, size_t size) {
-    std::stringstream oss;
-    std::for_each(buf, (buf + size), [&oss](char c) {
-        unsigned char uc = static_cast<unsigned char>(c);
-        if (isprint(uc)) {
-            oss << c;
-        } else if (uc == '\0') {
-            oss << "\\0";
-        } else {
-            oss << "\\" << std::setfill('0') << std::setw(3) << std::oct
-                << static_cast<unsigned int>(uc);
-        }
-    });
-    return oss.str();
-}
 
 inline void print_encode_results(char* buf, size_t bufsize, const char* src,
                                  size_t srcsize, bool inplace) {
     using namespace std;
     // recode the human-readable encoded input into test_decoder format
-    string srcstr = hrslip::recode<hrslip::encoder_hr, test_encoder>(src, srcsize);
+    string srcstr = slip::recode<slip::encoder_hr, test_encoder>(src, srcsize);
     src           = srcstr.c_str();
     srcsize       = srcstr.length();
     memset(buf, '.', bufsize);
@@ -43,7 +29,7 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
         memcpy(buf, src, srcsize);
         src = buf;
     }
-    cout << "src:  \"" << srcstr << "\"";
+    cout << "src:  " << slip::escaped(srcstr);
     size_t est_nencoded = test_encoder::encoded_size(src, srcsize);
     if (est_nencoded > bufsize) {
         cout << "<<< !!Warning!! dsize not big enough to hold encoded string";
@@ -56,8 +42,8 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
     nencoded = test_encoder::encode(buf, bufsize, src, srcsize);
     string encstr(buf, nencoded);
     if (nencoded < bufsize) buf[nencoded] = '\0';
-    cout << "encs: \"" << encstr << "\"" << endl;
-    cout << "ebuf: [" << to_escaped_string(buf, bufsize) << "]" << endl;
+    cout << "encs: " << slip::escaped(encstr) << endl;
+    cout << "ebuf: " << slip::escaped(buf, bufsize, "[]")  << endl;
 
     // decode
     size_t est_ndecoded = test_decoder::decoded_size(buf, nencoded);
@@ -69,8 +55,8 @@ inline void print_encode_results(char* buf, size_t bufsize, const char* src,
     }
 
     string decstr(buf, ndecoded);
-    cout << "decs: \"" << decstr << "\"" << endl;
-    cout << "dbuf: [" << to_escaped_string(buf, bufsize) << "]" << endl;
+    cout << "decs: " << slip::escaped(decstr) << endl;
+    cout << "dbuf: " << slip::escaped(buf, bufsize, "[]") << endl;
 
     if (est_nencoded != nencoded)
         cout << "!!Warning!! encoded size estimate:" << est_nencoded

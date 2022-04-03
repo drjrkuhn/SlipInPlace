@@ -13,8 +13,8 @@
 
 #include <catch.hpp>
 
-using namespace hrslip;
-using test_encoder = slip::encoder_null<char>;
+using namespace slip;
+using test_encoder = slip::null_encoder;
 
 TEST_CASE("encoder_null out-of-place large buffer", "[encoder_null-oop-01]") {
     size_t ec_size;

@@ -13,7 +13,7 @@
 
 #include <catch.hpp>
 
-using namespace hrslip;
+using namespace slip;
 using test_decoder = decoder_hr;
 
 TEST_CASE("decoder_hr large buffer", "[decoder_hr-01]") {

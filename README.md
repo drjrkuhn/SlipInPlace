@@ -40,42 +40,54 @@ This library has another SLIP+NULL encoder that replaces `END` and `ESC` as abov
 The standard SLIP encoder and decoder are pre-defined. Two simple use-cases are below
 
 Out-of-place encoding and decoding:
-```C++
-char ebuf[32];
-char* source = "Lo\300rus"; // Note END in middle of string
 
+```C++
+char ebuf[16]; 
+const char* source = "Lo\300rus"; // Note END in middle of string
 // encoding
-size_t esize = slip::encoder<char>::encode(ebuf,32,source,strlen(source));
-//> ebuf == "Lo\333\334rus\300"; esize == 8; END(\300) at end
+size_t esize = slip::encoder::encode(ebuf, 16, source, strlen(source));
+// ebuf == "Lo\333\334rus\300"; esize == 8;
 
 // decoding
-char dbuf[32];
-size_t dsize = slip::decoder<char>::decode(dbuf,32,ebuf,esize);
-//> dbuf == "Lo\300rus"; dsize == 6;
-std::string decoded(dbuf,dsize);
+char dbuf[16]; 
+size_t dsize = slip::decoder::decode(dbuf, 16, ebuf, esize);
+// dbuf == "Lo\300rus"; dsize == 6;
+
+string final(dbuf, dsize);
+// final == "Lo\300rus";
 ```
 
 In-place encoding and decoding:
 ```C++
-char buffer[32];
-char* source = "Lo\300rus"; // Note END in middle of string
+char buffer[16]; 
+const char* source = "Lo\300rus"; // Note END in middle of string
+strcpy(buffer, source);
 
 // encoding
-strcpy(buffer, source);
-size_t esize = slip::encoder<char>::encode(buffer,32,source,strlen(source));
-//> buffer == "Lo\333\334rus\300"; esize == 8; END(\300) at end
+size_t esize = slip::encoder::encode(buffer, 16, buffer, strlen(source));
+// buffer == "Lo\333\334rus\300"; esize == 8;
 
 // decoding
-size_t dsize = slip::decoder<char>::decode(buffer,32,ebuf,esize);
-//> buffer == "Lo\300rus"; dsize == 6;
-std::string decoded(buffer,dsize);
+size_t dsize = slip::decoder::decode(buffer, 16, buffer, esize);
+// buffer == "Lo\300rus"; dsize == 6;
+
+string final(buffer, dsize);
+// final == "Lo\300rus";
 ```
 
-You can declare a byte encoder or decoder that works with `unsigned chars` (`uint8_t`) by replacing `char` in the template parameter by `unsigned char`.
+Communication protocols are usually byte oriented rather than character oriented. In C and C++ `char` can also encode UTF-8 strings with two-byte characters. The default SLIP encoder/decoder pairs work with `unsigned chars` (`uint8_t`) and includes additional `encode()` and `decode()` functions that translate `char*` as `unsigned char*` via `reinterpret_cast<>`.
+
+You can declare a char encoder or decoder that works with `chars` (`uint8_t`) through `slip_decoder_base` and `slip_encoder_base`
 
 ```C++
-typedef slip::encoder<uint8_t> byte_encoder;
-typedef slip::decoder<uint8_t> byte_decoder;
+//=== With 'typedef' directives
+typedef slip::encoder_base<char> char_encoder;
+typedef slip::decoder_base<char> char_decoder;
+
+//=== OR with 'using' directives
+using encoder = slip_encoder_base<char>;
+using decoder = slip_decoder_base<char>;
+
 ```
 
 ### Other encodings

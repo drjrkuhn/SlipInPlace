@@ -9,7 +9,7 @@
 #ifndef __HRSLIP_H__
     #define __HRSLIP_H__
 
-namespace hrslip {
+namespace slip {
     typedef slip::encoder_base<char, '#', 'D', '^', '['> encoder_hr;
     typedef slip::decoder_base<char, '#', 'D', '^', '['> decoder_hr;
 
@@ -19,12 +19,13 @@ namespace hrslip {
     template <class FROM, class TO>
     std::string recode(const std::string& src) {
         std::string dest = src;
+        using to_char_t = typename TO::char_type;
         if (src.length() == 0)
             return dest;
         assert(FROM::num_specials == TO::num_specials);
         for (int i = 0; i < FROM::num_specials; i++) {
-            std::replace(dest.begin(), dest.end(), FROM::special_codes()[i], TO::special_codes()[i]);
-            std::replace(dest.begin(), dest.end(), FROM::escaped_codes()[i], TO::escaped_codes()[i]);
+            std::replace(dest.begin(), dest.end(), static_cast<to_char_t>(FROM::special_codes()[i]), TO::special_codes()[i]);
+            std::replace(dest.begin(), dest.end(), static_cast<to_char_t>(FROM::escaped_codes()[i]), TO::escaped_codes()[i]);
         }
         return dest;
     }

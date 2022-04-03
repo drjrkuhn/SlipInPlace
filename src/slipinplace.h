@@ -54,6 +54,10 @@
 
 namespace slip {
 
+    /**************************************************************************************
+     * Standard and extended SLIP character codes
+     **************************************************************************************/
+
     /* Standard SLIP codes: END=\300 ESC=\333 ESCEND=\334 ESCESC=\335. */
     struct stdcodes {
         static constexpr unsigned char SLIP_END      = 0300; ///< 0xC0
@@ -64,10 +68,14 @@ namespace slip {
         static constexpr unsigned char SLIPX_ESCNULL = 0336; ///< 0xDE (nonstandard)
     };
 
+    /**************************************************************************************
+     * Base for both encoders and decoders
+     **************************************************************************************/
+
     /**
-     * @brief Base class for custom SLIP codes.
+     * @brief Base container for custom SLIP codes.
      *
-     * targets C++11 - no variable or static data member at class scope
+     * targets C++11 - no variable or static data member at struct/class scope
      * [(since C++14)](https://en.cppreference.com/w/cpp/language/variable_template)
      *
      * @tparam _CharT       unsigned char or char
@@ -82,6 +90,8 @@ namespace slip {
     template <typename _CharT, unsigned char _EndC, unsigned char _EscEndC, unsigned char _EscC, unsigned char _EscEscC,
               unsigned char _NullC = 0, unsigned char _EscNullC = 0>
     struct slip_base {
+        using char_type    = _CharT;
+        using pointer_type = _CharT*;
         static constexpr _CharT end_code() noexcept { return (_CharT)_EndC; }         ///< end code
         static constexpr _CharT escend_code() noexcept { return (_CharT)_EscEndC; }   ///< escaped end code
         static constexpr _CharT esc_code() noexcept { return (_CharT)_EscC; }         ///< escape code
@@ -138,6 +148,10 @@ namespace slip {
     };
     #endif
 
+    /**************************************************************************************
+     * Base encoder
+     **************************************************************************************/
+
     /**
      * @brief Basic SLIP encoder.
      *
@@ -152,21 +166,20 @@ namespace slip {
      * @tparam _NullC       NULL character code \000
      * @tparam _EscNullC    escaped NULL character code \335 (non-standard)
      */
-    template <typename _CharT, unsigned char _EndC, unsigned char _EscEndC, unsigned char _EscC, unsigned char _EscEscC,
-              unsigned char _NullC = 0, unsigned char _EscNullC = 0>
-    struct encoder_base : public slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC> {
-        typedef slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC> base;
-        using base::end_code;
-        using base::escend_code;
-        using base::esc_code;
-        using base::escesc_code;
-        using base::null_code;
-        using base::escnull_code;
-        using base::max_specials;
-        using base::num_specials;
-        using base::is_null_encoded;
-        using base::special_codes;
-        using base::escaped_codes;
+    template <typename _CharT, unsigned char... _C>
+    struct encoder_base : public slip_base<_CharT, _C...> {
+        using BASE = slip_base<_CharT, _C...>;
+        using BASE::end_code;
+        using BASE::escend_code;
+        using BASE::esc_code;
+        using BASE::escesc_code;
+        using BASE::null_code;
+        using BASE::escnull_code;
+        using BASE::max_specials;
+        using BASE::num_specials;
+        using BASE::is_null_encoded;
+        using BASE::special_codes;
+        using BASE::escaped_codes;
 
         /**
          * @brief Pre-calculate the size after SLIP encoding.
@@ -181,7 +194,7 @@ namespace slip {
             size_t nspecial               = 0;
             int isp;
             for (; src < buf_end; src++) {
-                isp = base::test_codes(src[0], specials);
+                isp = BASE::test_codes(src[0], specials);
                 if (isp >= 0) nspecial++;
             }
             return srcsize + nspecial + 1;
@@ -206,8 +219,7 @@ namespace slip {
          * @param srcsize   size of source to encode
          * @return size_t   final encoded size or 0 if there was an error while encoding
          */
-        static inline size_t encode(_CharT* dest, size_t destsize, const _CharT* src,
-                                    size_t srcsize) noexcept {
+        static inline size_t encode(_CharT* dest, size_t destsize, const _CharT* src, size_t srcsize) noexcept {
             static constexpr size_t BAD_DECODE = 0;
             static const _CharT* specials      = special_codes();
             static const _CharT* escapes       = escaped_codes();
@@ -225,7 +237,7 @@ namespace slip {
             int isp;
 
             while (src < send) {
-                isp = base::test_codes(src[0], specials);
+                isp = BASE::test_codes(src[0], specials);
                 if (isp < 0) { // regular character
                     if (dest >= dend) return BAD_DECODE;
                     *(dest++) = *(src++); // copy it
@@ -243,7 +255,21 @@ namespace slip {
             *(dest++) = end_code();
             return dest - dstart;
         }
+
+        template <typename _FromC>
+        static inline size_t encoded_size(const _FromC* src, size_t srcsize) noexcept {
+            return encoded_size(reinterpret_cast<const _CharT*>(src), srcsize);
+        }
+
+        template <typename _FromC>
+        static inline size_t encode(_FromC* dest, size_t destsize, const _FromC* src, size_t srcsize) noexcept {
+            return encode(reinterpret_cast<_CharT*>(dest), destsize, reinterpret_cast<const _CharT*>(src), srcsize);
+        }
     };
+
+    /**************************************************************************************
+     * Base decoder
+     **************************************************************************************/
 
     /**
      * @brief Basic SLIP decoder.
@@ -258,21 +284,20 @@ namespace slip {
      * @tparam _NullC       NULL character code \000
      * @tparam _EscNullC    escaped NULL character code \335 (non-standard)
      */
-    template <typename _CharT, unsigned char _EndC, unsigned char _EscEndC, unsigned char _EscC, unsigned char _EscEscC,
-              unsigned char _NullC = 0, unsigned char _EscNullC = 0>
-    struct decoder_base : public slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC> {
-        typedef slip_base<_CharT, _EndC, _EscEndC, _EscC, _EscEscC, _NullC, _EscNullC> base;
-        using base::end_code;
-        using base::escend_code;
-        using base::esc_code;
-        using base::escesc_code;
-        using base::null_code;
-        using base::escnull_code;
-        using base::max_specials;
-        using base::num_specials;
-        using base::is_null_encoded;
-        using base::special_codes;
-        using base::escaped_codes;
+    template <typename _CharT, unsigned char... _C>
+    struct decoder_base : public slip_base<_CharT, _C...> {
+        using BASE = slip_base<_CharT, _C...>;
+        using BASE::end_code;
+        using BASE::escend_code;
+        using BASE::esc_code;
+        using BASE::escesc_code;
+        using BASE::null_code;
+        using BASE::escnull_code;
+        using BASE::max_specials;
+        using BASE::num_specials;
+        using BASE::is_null_encoded;
+        using BASE::special_codes;
+        using BASE::escaped_codes;
 
         /**
          * @brief Pre-calculate the size after SLIP decoding.
@@ -314,8 +339,7 @@ namespace slip {
          * @param srcsize   size of source to decode
          * @return size_t   final decoded size or 0 if there was an error while decoding
          */
-        static inline size_t decode(_CharT* dest, size_t destsize, const _CharT* src,
-                                    size_t srcsize) noexcept {
+        static inline size_t decode(_CharT* dest, size_t destsize, const _CharT* src, size_t srcsize) noexcept {
             static constexpr size_t BAD_DECODE = 0;
             static const _CharT* specials      = special_codes();
             static const _CharT* escapes       = escaped_codes();
@@ -334,7 +358,7 @@ namespace slip {
                     // check char after escape
                     src++;
                     if (src >= send || dest >= dend) return BAD_DECODE;
-                    isp = base::test_codes(src[0], escapes);
+                    isp = BASE::test_codes(src[0], escapes);
                     if (isp < 0) return BAD_DECODE; // invalid escape code
                     *(dest++) = specials[isp];
                     src++;
@@ -342,61 +366,122 @@ namespace slip {
             }
             return dest - dstart;
         }
+
+        template <typename _FromC>
+        static inline size_t decoded_size(const _FromC* src, size_t srcsize) noexcept {
+            return decoded_size(reinterpret_cast<const _CharT*>(src), srcsize);
+        }
+
+        template <typename _FromC>
+        static inline size_t decode(_FromC* dest, size_t destsize, const _FromC* src, size_t srcsize) noexcept {
+            return decode(reinterpret_cast<_CharT*>(dest), destsize, reinterpret_cast<const _CharT*>(src), srcsize);
+        }
     };
 
-    /**
-     * @brief Standard slip encoder.
-     * @copydoc encoder_base
-     *
-     * @see "hrslip.h" in test-code for an example of a human-readable SLIP fornmat.
-     *
-     * @tparam _CharT    may be char or unsigned char (uint8_t)
-     */
-    template <typename _CharT>
-    struct encoder : public encoder_base<_CharT, stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
-                                         stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC> {
-    };
+    /**************************************************************************************
+     * Base for standard and extended SLIP encoders and decoders
+     **************************************************************************************/
 
-    /**
-     * @brief Standard slip encoder with additional NULL character encoding.
-     * @copydoc encoder_base
-     *
-     * @see "hrslip.h" in test-code for an example of a human-readable SLIP fornmat.
-     *
-     * @tparam _CharT    may be char or unsigned char (uint8_t)
-     */
     template <typename _CharT>
-    struct encoder_null : public encoder_base<_CharT, stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
-                                              stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC,
-                                              stdcodes::SLIPX_NULL, stdcodes::SLIPX_ESCNULL> {
-    };
+    using slip_encoder_base = encoder_base<_CharT,
+                                           stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
+                                           stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC>;
+    template <typename _CharT>
+    using slip_decoder_base = decoder_base<_CharT,
+                                           stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
+                                           stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC>;
+    template <typename _CharT>
+    using slipnull_encoder_base = encoder_base<_CharT,
+                                               stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
+                                               stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC,
+                                               stdcodes::SLIPX_NULL, stdcodes::SLIPX_ESCNULL>;
+    template <typename _CharT>
+    using slipnull_decoder_base = decoder_base<_CharT,
+                                               stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
+                                               stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC,
+                                               stdcodes::SLIPX_NULL, stdcodes::SLIPX_ESCNULL>;
 
-    /**
-     * @brief Standard slip decoder.
-     * @copydoc decoder_base
-     *
-     * @see "hrslip.h" in test-code for an example of a human-readable SLIP fornmat.
-     *
-     * @tparam _CharT    may be char or unsigned char (uint8_t)
-     */
-    template <typename _CharT>
-    struct decoder : public decoder_base<_CharT, stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
-                                         stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC> {
-    };
+    /**************************************************************************************
+     * Final byte-oriented (unsigned char) standard encoder and decoder
+     **************************************************************************************/
 
-    /**
-     * @brief Standard slip decoder with additional NULL character encoding.
-     * @copydoc decoder_base
-     *
-     * @see "hrslip.h" in test-code for an example of a human-readable SLIP fornmat.
-     *
-     * @tparam _CharT    may be char or unsigned char (uint8_t)
-     */
-    template <typename _CharT>
-    struct decoder_null : public decoder_base<_CharT, stdcodes::SLIP_END, stdcodes::SLIP_ESCEND,
-                                              stdcodes::SLIP_ESC, stdcodes::SLIP_ESCESC,
-                                              stdcodes::SLIPX_NULL, stdcodes::SLIPX_ESCNULL> {
-    };
+    using encoder = slip_encoder_base<unsigned char>;
+    using decoder = slip_decoder_base<unsigned char>;
+
+    using null_encoder = slipnull_encoder_base<unsigned char>;
+    using null_decoder = slipnull_decoder_base<unsigned char>;
+
+    // struct null_encoder : public slipnull_encoder_base<unsigned char> {
+    //     using BASE = slipnull_encoder_base<unsigned char>;
+    //     using BASE::char_type;
+    //     using BASE::end_code;
+    //     using BASE::escend_code;
+    //     using BASE::esc_code;
+    //     using BASE::escesc_code;
+    //     using BASE::null_code;
+    //     using BASE::escnull_code;
+    //     using BASE::max_specials;
+    //     using BASE::num_specials;
+    //     using BASE::is_null_encoded;
+    //     using BASE::special_codes;
+    //     using BASE::escaped_codes;
+    //     using BASE::encoded_size;
+    //     using BASE::encode;
+    //     static inline size_t encoded_size(const char* src, size_t srcsize) noexcept {
+    //         return BASE::encoded_size(reinterpret_cast<const unsigned char*>(src), srcsize);
+    //     }
+    //     static inline size_t encode(char* dest, size_t destsize, const char* src, size_t srcsize) noexcept {
+    //         return BASE::encode(reinterpret_cast<unsigned char*>(dest), destsize, reinterpret_cast<const unsigned char*>(src), srcsize);
+    //     }
+    // };
+
+    // struct decoder : public slip_decoder_base<unsigned char> {
+    //     using BASE = slip_decoder_base<unsigned char>;
+    //     using BASE::char_type;
+    //     using BASE::end_code;
+    //     using BASE::escend_code;
+    //     using BASE::esc_code;
+    //     using BASE::escesc_code;
+    //     using BASE::null_code;
+    //     using BASE::escnull_code;
+    //     using BASE::max_specials;
+    //     using BASE::num_specials;
+    //     using BASE::is_null_encoded;
+    //     using BASE::special_codes;
+    //     using BASE::escaped_codes;
+    //     using BASE::decoded_size;
+    //     using BASE::decode;
+    //     static inline size_t decoded_size(const char* src, size_t srcsize) noexcept {
+    //         return BASE::decoded_size(reinterpret_cast<const unsigned char*>(src), srcsize);
+    //     }
+    //     static inline size_t decode(char* dest, size_t destsize, const char* src, size_t srcsize) noexcept {
+    //         return BASE::decode(reinterpret_cast<unsigned char*>(dest), destsize, reinterpret_cast<const unsigned char*>(src), srcsize);
+    //     }
+    // };
+
+    // struct null_decoder : public slipnull_decoder_base<unsigned char> {
+    //     using BASE = slipnull_decoder_base<unsigned char>;
+    //     using BASE::char_type;
+    //     using BASE::end_code;
+    //     using BASE::escend_code;
+    //     using BASE::esc_code;
+    //     using BASE::escesc_code;
+    //     using BASE::null_code;
+    //     using BASE::escnull_code;
+    //     using BASE::max_specials;
+    //     using BASE::num_specials;
+    //     using BASE::is_null_encoded;
+    //     using BASE::special_codes;
+    //     using BASE::escaped_codes;
+    //     using BASE::decoded_size;
+    //     using BASE::decode;
+    //     static inline size_t decoded_size(const char* src, size_t srcsize) noexcept {
+    //         return BASE::decoded_size(reinterpret_cast<const unsigned char*>(src), srcsize);
+    //     }
+    //     static inline size_t decode(char* dest, size_t destsize, const char* src, size_t srcsize) noexcept {
+    //         return BASE::decode(reinterpret_cast<unsigned char*>(dest), destsize, reinterpret_cast<const unsigned char*>(src), srcsize);
+    //     }
+    // };
 }
 
 #endif // __SLIPINPLACE_H__
