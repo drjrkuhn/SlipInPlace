@@ -7,7 +7,7 @@
 #include <SlipInPlace.h>
 #include <sstream>
 
-#include <sliputils.h>
+#include <SlipUtils.h>
 
 #if 0
 using test_encoder = slip::encoder<char>;

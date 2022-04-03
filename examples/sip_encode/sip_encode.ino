@@ -9,7 +9,6 @@
  * \date   April 2022
  *********************************************************************/
 
-#include <Arduino.h>
 #include <SlipInPlace.h>
 
 // human-readable encoders and decoders

@@ -6,7 +6,7 @@
 #include <SlipInPlace.h>
 #include <sstream>
 #include <string>
-#include "sliputils.h"
+#include "SlipUtils.h"
 
 using namespace std;
 
