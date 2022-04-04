@@ -42,6 +42,16 @@
     #include <cstdint> // for uint8_t
     #include <string.h> // for memmove
 
+    #ifdef __has_include
+    #  if __has_include(<type_traits>)
+    #    include <type_traits>
+    #  elif __has_include("Polyfills/type_traits.h")
+    #    include "Polyfills/type_traits.h"
+    #  else
+    #     error "Missing <type_traits>"
+    #  endif
+    #endif
+
     #if !defined(__ALWAYS_INLINE__)
         #if defined(__GNUC__) && __GNUC__ > 3
             #define __ALWAYS_INLINE__ inline __attribute__((__always_inline__))
@@ -257,13 +267,23 @@ namespace slip {
             return dest - dstart;
         }
 
-        template <typename _FromC>
-        static inline size_t encoded_size(const _FromC* src, size_t srcsize) noexcept {
+        /**
+         * @copydoc encoded_size
+         * @tparam _FromT must have same element size as _CharT
+         */
+        template <typename _FromT,
+            typename std::enable_if<sizeof(_FromT)==sizeof(_CharT),bool>::type = true>
+        static inline size_t encoded_size(const _FromT* src, size_t srcsize) noexcept {
             return encoded_size(reinterpret_cast<const _CharT*>(src), srcsize);
         }
 
-        template <typename _FromC>
-        static inline size_t encode(_FromC* dest, size_t destsize, const _FromC* src, size_t srcsize) noexcept {
+        /**
+         * @copydoc encode
+         * @tparam _FromT must have same element size as _CharT
+         */
+        template <typename _FromT,
+            typename std::enable_if<sizeof(_FromT)==sizeof(_CharT),bool>::type = true>
+        static inline size_t encode(_FromT* dest, size_t destsize, const _FromT* src, size_t srcsize) noexcept {
             return encode(reinterpret_cast<_CharT*>(dest), destsize, reinterpret_cast<const _CharT*>(src), srcsize);
         }
     };
@@ -369,13 +389,23 @@ namespace slip {
             return dest - dstart;
         }
 
-        template <typename _FromC>
-        static inline size_t decoded_size(const _FromC* src, size_t srcsize) noexcept {
+        /**
+         * @copydoc decoded_size
+         * @tparam _FromT must have same element size as _CharT
+         */
+        template <typename _FromT,
+            typename std::enable_if<sizeof(_FromT)==sizeof(_CharT),bool>::type = true>
+        static inline size_t decoded_size(const _FromT* src, size_t srcsize) noexcept {
             return decoded_size(reinterpret_cast<const _CharT*>(src), srcsize);
         }
 
-        template <typename _FromC>
-        static inline size_t decode(_FromC* dest, size_t destsize, const _FromC* src, size_t srcsize) noexcept {
+        /**
+         * @copydoc decode
+         * @tparam _FromT must have same element size as _CharT
+         */
+        template <typename _FromT,
+            typename std::enable_if<sizeof(_FromT)==sizeof(_CharT),bool>::type = true>
+        static inline size_t decode(_FromT* dest, size_t destsize, const _FromT* src, size_t srcsize) noexcept {
             return decode(reinterpret_cast<_CharT*>(dest), destsize, reinterpret_cast<const _CharT*>(src), srcsize);
         }
     };
