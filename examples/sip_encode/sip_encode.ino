@@ -57,7 +57,7 @@ void test_encode_decode(String srcstr, size_t bufsize, bool inplace) {
     nencoded = encoder_hr::encode(buf, bufsize, src, srcsize);
     String encstr;
     if (nencoded < bufsize) buf[nencoded] = '\0';
-    encstr.copy(buf, nencoded);
+    encstr = String(buf);
     if (nencoded < bufsize) buf[nencoded] = '\0';
     Serial.print("encs: \"");
     Serial.print(encstr);
@@ -77,7 +77,7 @@ void test_encode_decode(String srcstr, size_t bufsize, bool inplace) {
 
     String decstr;
     if (ndecoded < bufsize) buf[ndecoded] = '\0';
-    decstr.copy(buf, ndecoded);
+    decstr = String(buf);
     Serial.print("decs: \"");
     Serial.print(decstr);
     Serial.println("\"");

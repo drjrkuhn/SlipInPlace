@@ -39,11 +39,11 @@
         #define SLIP_UNROLL_LOOPS 1
     #endif
 
-    #include <cstdint> // for uint8_t
+    #include <stdint.h> // for uint8_t
     #include <string.h> // for memmove
 
     #ifdef __has_include
-    #  if __has_include(<type_traits>)
+    #  if __has_include(<type_traits>) // for enable_if
     #    include <type_traits>
     #  elif __has_include("Polyfills/type_traits.h")
     #    include "Polyfills/type_traits.h"
