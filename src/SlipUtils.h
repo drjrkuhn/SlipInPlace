@@ -56,6 +56,10 @@ namespace slip {
         return oss.str();
     }
 
+    inline std::string escaped(const unsigned char* buf, size_t size, const char* brackets = "\"\"") {
+        return escaped(reinterpret_cast<const char*>(buf), size, brackets);
+    }
+
     inline std::string escaped(std::string& src, const char* brackets = "\"\"") {
         return escaped(src.c_str(), src.length(), brackets);
     }
